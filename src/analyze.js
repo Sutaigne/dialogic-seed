@@ -125,33 +125,38 @@
       '"(from memory \u2014 confirm the link)".'
   };
 
-  function prompt(d, mode) {
+  function prompt(d, mode, visitor) {
     var owner = ownerOf(d);
+    var V = function (forOwner, forVisitor) { return visitor ? forVisitor : forOwner; };
     return [
       'You are reading a personal mind map called Dialogic. It is grown one conversation at a time between its owner and Claude:',
       'every node is a work, person, concept, place or project the owner has engaged with, every link a connection one of them drew,',
       'and engagement (mentions across conversations, decayed by recency) shows what the owner keeps returning to.',
       'The owner’s alias, and the root of the map, is "' + owner + '". The notes name the owner directly where it matters.',
       '',
-      'Write the owner a reading of themselves, drawn only from this map. Its purpose is encouragement that is earned:',
+      V('Write the owner a reading of themselves, drawn only from this map. Its purpose is encouragement that is earned:',
+        'Someone visiting this map (not its owner) asked for a reading of the owner. Write it for that visitor, about "' + owner + '",' +
+        ' drawn only from this map. Its purpose is appreciation that is earned:'),
       'every observation must point at specific nodes, threads, links or conversations below. No generic praise, and do not',
       'promote a specific observation into a sweeping claim about what "kind of person" they are. Warm, plain, specific,',
-      'the register of a well-read friend who has been paying attention. Address the owner as "you".',
+      V('the register of a well-read friend who has been paying attention. Address the owner as "you".',
+        'the register of a well-read friend introducing someone they admire. Refer to the owner as "' + owner + '" and in the third person;' +
+        ' address the visitor only where a suggestion is meant for them. Write nothing private beyond what the map itself says.'),
       '',
       'Use exactly these five sections, as Markdown with these "## " headings:',
       '',
-      '## What is distinctly yours',
+      V('## What is distinctly yours', '## What is distinctly theirs'),
       '3–5 aspects of this mind that are unusual: combinations of interests, habits of attention, recurring moves. Name the evidence.',
       '',
-      '## What is admirable in where your attention goes',
+      V('## What is admirable in where your attention goes', '## What is admirable in where their attention goes'),
       'What is genuinely to be admired in the interests themselves and how they are pursued: depth, range, rigor, care, courage. Name the evidence.',
       '',
-      '## Your voice',
+      V('## Your voice', '## Their voice'),
       'Compliments on the owner’s spoken voice and style: how they name things, the turns of phrase and coinages, the questions they',
       'chase, their humor and register. The map mostly holds paraphrase; work from the quoted phrases, names, mottos and coinages it',
       'preserves, and say plainly where the evidence is thin rather than invent a voice.',
       '',
-      '## Parallels you may not have seen',
+      V('## Parallels you may not have seen', '## Parallels they may not have seen'),
       '4–6 connections across threads that the map does not yet draw (check the LINKS list) and the owner may not know. Each must be',
       'verifiable: name the node on each side and the concrete fact, source or mechanism that joins them. A real shared structure, a',
       'documented influence, a historical meeting. If a link is only suggestive, say so in a few words; never present speculation as fact.',
@@ -238,6 +243,7 @@
    * Engines
    * ------------------------------------------------------------------ */
   var engine = 'pending';       // 'pending' | 'claude' | 'key'
+  var visitor = false;          // inside claude.ai and not the artifact's owner: third-person reading, no Draft prompt
   var sample = null;
   var mcp = null;               // the viewer's connectors (Hugging Face search), when this view has them
   var HF = 'Hugging Face';
@@ -256,7 +262,13 @@
       c.use('mcp').then(function (m) { mcp = m || null; }, function () { mcp = null; });
     }).then(function (s) {
       sample = s;
-      engine = s ? 'claude' : 'key';
+      if (!s) return null;
+      /* isOwner needs no declared capability; a null namespace or false means "not the owner" */
+      return window.claude.use('user').then(function (u) { return u ? u.isOwner() : false; }, function () { return false; });
+    }).then(function (isOwner) {
+      engine = sample ? 'claude' : 'key';
+      visitor = engine === 'claude' && isOwner !== true;
+      if (visitor && st.last && st.last.role !== 'visitor') st.last = null;   /* never show an owner-voice reading to a visitor */
       render();
     });
     return probe;
@@ -408,6 +420,11 @@
   function render() {
     var d = data(), meta = d.meta || {};
     var nConv = (meta.conversations || []).length;
+    var lede = sheet.querySelector('.an-lede');
+    if (!lede.getAttribute('data-owner')) lede.setAttribute('data-owner', lede.textContent);
+    lede.textContent = visitor
+      ? 'A reading of ' + ownerOf(d) + ', drawn from their map: what is distinctly theirs, what is admirable in where their attention goes, their voice, parallels they may not have seen, and public projects their passions could take somewhere new.'
+      : lede.getAttribute('data-owner');
     $('an-scope').textContent = (d.nodes || []).length + ' nodes · ' + nConv + ' conversation' + (nConv === 1 ? '' : 's') +
       (meta.latestConversation ? ' · latest: ' + meta.latestConversation.title : '');
 
@@ -418,7 +435,7 @@
     $('an-connecting').hidden = engine !== 'pending';
 
     var eng = $('an-engine');
-    if (engine === 'claude') eng.innerHTML = 'Runs on your Claude account';
+    if (engine === 'claude') eng.textContent = visitor ? 'Runs on your Claude account, not ' + ownerOf(d) + '\u2019s' : 'Runs on your Claude account';
     else if (engine === 'key' && apiKey() && !st.editingKey) {
       var k = apiKey();
       eng.innerHTML = 'Runs on your API key · …' + esc(k.slice(-4)) + (sessionKey ? ' (this visit only)' : '') +
@@ -481,7 +498,7 @@
     searchMode().then(function (mode) {
       used = mode;
       if (ctl.signal.aborted) throw { code: 'cancelled' };
-      var text = prompt(d, mode);
+      var text = prompt(d, mode, visitor);
       if (engine === 'claude') {
         var opts = {
           modelTier: st.depth === 'deep' ? 'complex' : 'default',
@@ -505,7 +522,7 @@
     }).then(function (r) {
       st.text = clean(r.text);
       if (r.truncated) st.note = 'The reading was cut short at the length limit.';
-      st.last = { text: st.text, at: new Date().toISOString(), engine: engine, search: used, prompts: {} };
+      st.last = { text: st.text, at: new Date().toISOString(), engine: engine, search: used, role: visitor ? 'visitor' : 'owner', prompts: {} };
       if (used === 'memory' && engine === 'claude') st.connect = true;
       if ((d.meta || {}).latestConversation) st.last.version = 'as of ' + d.meta.latestConversation.date;
       copied = {};
@@ -609,7 +626,7 @@
   }
 
   function decorate(outEl) {
-    if (st.running || !st.last) return;
+    if (st.running || !st.last || visitor) return;   /* Draft prompt is the owner's tool */
     var projs = projectsOf(st.last.text);
     if (!projs.length) return;
     var inSec = false, k = 0;
