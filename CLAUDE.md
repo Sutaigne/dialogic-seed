@@ -32,9 +32,10 @@ node data/test/run.mjs          # all pass on the frozen made-up fixture; real f
 node build.mjs                  # dist/dialogic-map.html (~2 MB+, fonts + graph bundle inlined)
 # 2. publish dist/dialogic-map.html with the Artifact tool:
 #    ordinary run: update the artifact whose URL is in SETTINGS.md (read it once in the session first if the tool asks;
-#    omit `capabilities` so the stored {sample: {}} carries forward).
+#    omit `capabilities` so the stored declaration carries forward).
 #    (first run): SETTINGS.md has no artifact URL yet. Publish a NEW artifact (title "Dialogic", icon "map",
-#    capabilities {sample: {}} so the Analyze sheet can run on the owner's Claude account),
+#    capabilities {sample: {}, mcp: {servers: [{server: "Hugging Face", tools: ["hub_repo_search"]}]}} so the Analyze
+#    sheet runs on the owner's Claude account and can search public projects if they have that connector),
 #    then write its URL into SETTINGS.md. This is the only time a new artifact is ever created.
 node scripts/export.mjs         # out/knowledge/dialogic-map.txt + out/reports/run-summary.md
 ```

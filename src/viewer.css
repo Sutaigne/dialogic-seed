@@ -805,6 +805,7 @@ html, body {
 .an-out li::marker { color: var(--oxblood); }
 .an-out strong { font-weight: 500; color: var(--ink); }
 .an-out em { font-style: italic; }
+.an-out a { color: var(--oxblood); text-decoration: underline; text-decoration-thickness: 0.5px; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .an-out code { font-family: var(--ff-mono); font-size: 13px; }
 .an-out hr { border: 0; border-top: 0.5px solid var(--rule-med); margin: 18px 0; }
 .an-h {
@@ -814,6 +815,10 @@ html, body {
 }
 .an-out > .an-h:first-child { margin-top: 10px; border-top: 0; }
 .an-h4 { margin: 18px 0 6px; font-family: var(--ff-serif); font-style: italic; font-weight: 400; font-size: 18px; }
+.an-h4 .an-draft { display: inline-flex; align-items: center; vertical-align: middle; margin: 0 0 2px 12px; min-height: 28px; padding: 5px 9px; font-family: var(--ff-mono); font-style: normal; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--oxblood); border-color: var(--oxblood); }
+.an-h4 .an-draft:hover { background: var(--oxblood); color: var(--bone); }
+.an-h4 .an-draft.is-done { background: var(--forest); border-color: var(--forest); color: var(--bone); }
+.an-h4 .an-draft:disabled { cursor: progress; opacity: 0.7; animation: an-breathe 1.8s ease-in-out infinite; }
 .an-thinking { color: var(--ink-3); font-style: italic; animation: an-breathe 1.8s ease-in-out infinite; }
 @keyframes an-breathe { 50% { opacity: 0.45; } }
 .an-foot { margin-top: 18px; padding-top: 10px; border-top: 0.5px solid var(--rule-faint); }
