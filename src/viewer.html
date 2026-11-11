@@ -1,0 +1,183 @@
+<div id="app">
+  <header id="top">
+    <div class="brand">
+      <h1 id="title">Dialogic</h1>
+      <p id="subtitle" class="mono"></p>
+    </div>
+    <nav id="threadnav" aria-label="Threads"></nav>
+    <div class="top-actions">
+      <button id="btn-share" class="btn" type="button" aria-expanded="true" aria-controls="share">Share</button>
+      <button id="btn-history" class="btn" type="button" aria-expanded="false" aria-controls="history" hidden>History</button>
+      <button id="btn-filters" class="btn" type="button" aria-expanded="true" aria-controls="filters">Filters</button>
+      <button id="btn-detail" class="btn" type="button" aria-expanded="true" aria-controls="detail">Detail</button>
+    </div>
+  </header>
+
+  <div id="stage">
+    <aside id="filters" class="panel" aria-label="Filters and legend">
+      <div class="panel-head">
+        <span class="mono lbl">Filters</span>
+        <button id="btn-filters-close" class="btn btn-quiet" type="button">Hide</button>
+      </div>
+
+      <section class="sec">
+        <h2 class="mono lbl">Find</h2>
+        <div class="search">
+          <input id="search" type="search" placeholder="Search nodes" autocomplete="off" spellcheck="false" aria-label="Search nodes by label" role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
+          <ul id="search-results" role="listbox" aria-label="Search results" hidden></ul>
+        </div>
+      </section>
+
+      <section class="sec">
+        <h2 class="mono lbl">Layout</h2>
+        <div class="seg" role="group" aria-label="Layout mode">
+          <button id="btn-mode-cluster" class="btn" type="button" aria-pressed="true">Clustered</button>
+          <button id="btn-mode-radial" class="btn" type="button" aria-pressed="false">Radial</button>
+        </div>
+        <p class="note">Radial places nodes on shells by distance from <span id="root-name"></span>.</p>
+        <div id="sizeby-wrap" hidden>
+          <div class="mono sub sizeby-lbl">Size by</div>
+          <div class="seg" role="group" aria-label="Size nodes by">
+            <button id="btn-size-conn" class="btn" type="button" aria-pressed="true">Connections</button>
+            <button id="btn-size-strength" class="btn" type="button" aria-pressed="false">Strength</button>
+          </div>
+        </div>
+        <div id="inkby-wrap" hidden>
+          <div class="mono sub sizeby-lbl">Ink</div>
+          <div class="seg" role="group" aria-label="Ink nodes by">
+            <button id="btn-ink-even" class="btn" type="button" aria-pressed="true">Even</button>
+            <button id="btn-ink-recency" class="btn" type="button" aria-pressed="false">Recency</button>
+          </div>
+          <p class="note">Recency prints an idea paler the more conversations have passed since you last returned to it.</p>
+        </div>
+        <button id="btn-reset" class="btn btn-block" type="button">Reset view</button>
+      </section>
+
+      <section class="sec">
+        <h2 class="mono lbl">Node type</h2>
+        <div id="f-types" class="checks"></div>
+      </section>
+
+      <section class="sec">
+        <h2 class="mono lbl">Thread</h2>
+        <div id="f-threads" class="checks"></div>
+      </section>
+
+      <section class="sec">
+        <h2 class="mono lbl">Edge origin</h2>
+        <div id="f-origins" class="checks"></div>
+        <div class="checks tight">
+          <label class="chk"><input id="f-basis" type="checkbox"><span class="box"></span><span class="txt">Conversation links only</span><span class="cnt" id="cnt-basis"></span></label>
+          <label class="chk"><input id="f-verify" type="checkbox"><span class="box"></span><span class="txt">Verify flags only</span><span class="cnt" id="cnt-verify"></span></label>
+        </div>
+      </section>
+
+      <section class="sec" id="sec-since" hidden>
+        <h2 class="mono lbl">Since</h2>
+        <select id="f-since" class="sel" aria-label="Show only items seen since this conversation"></select>
+        <p class="note">Hides nodes and links not seen since then. Threads and the root stay.</p>
+      </section>
+
+      <section class="sec" id="legend">
+        <h2 class="mono lbl">Legend</h2>
+        <div class="lg-block">
+          <div class="mono sub">Node type</div>
+          <ul id="lg-types" class="lg-list"></ul>
+        </div>
+        <div class="lg-block">
+          <div class="mono sub">Edge origin</div>
+          <ul class="lg-list">
+            <li><svg class="lg-svg" viewBox="0 0 44 12" aria-hidden="true"><line x1="2" y1="6" x2="42" y2="6" class="s-ox" stroke-width="1.6"/></svg><span><b id="legend-owner">Owner</b> &mdash; oxblood line</span></li>
+            <li><svg class="lg-svg" viewBox="0 0 44 12" aria-hidden="true"><line x1="2" y1="6" x2="42" y2="6" class="s-fo" stroke-width="1.6"/></svg><span><b>Claude</b> &mdash; forest line</span></li>
+            <li><svg class="lg-svg" viewBox="0 0 44 12" aria-hidden="true"><line x1="2" y1="6" x2="42" y2="6" class="s-ox" stroke-width="1.6"/><polygon points="20,2.5 28,6 20,9.5" class="f-fo"/><circle cx="9" cy="6" r="1.7" class="f-fo"/><circle cx="36" cy="6" r="1.7" class="f-fo"/></svg><span><b>Shared</b> &mdash; both: oxblood line, forest arrowhead, forest pulses</span></li>
+          </ul>
+          <p class="note">Arrowheads point source to target. With reduced motion the pulses stop; the forest arrowhead still marks Shared.</p>
+        </div>
+        <div class="lg-block">
+          <div class="mono sub">Edge basis</div>
+          <ul class="lg-list">
+            <li><svg class="lg-svg" viewBox="0 0 44 12" aria-hidden="true"><line x1="2" y1="6" x2="42" y2="6" class="s-ink" stroke-width="1.8"/></svg><span>Conversation link (Index D, cross-link, later conversations)</span></li>
+            <li id="lg-strength" hidden><svg class="lg-svg" viewBox="0 0 44 12" aria-hidden="true"><line x1="2" y1="6" x2="22" y2="6" class="s-ink" stroke-width="0.9" opacity="0.6"/><line x1="22" y1="6" x2="42" y2="6" class="s-ink" stroke-width="2.2"/></svg><span>Width and weight = link strength</span></li>
+            <li><svg class="lg-svg" viewBox="0 0 44 12" aria-hidden="true"><line x1="2" y1="6" x2="42" y2="6" class="s-ink faint" stroke-width="0.8"/></svg><span>Structural (belongs-to, wrote)</span></li>
+          </ul>
+        </div>
+        <div class="lg-block">
+          <div class="mono sub">Marks</div>
+          <ul class="lg-list">
+            <li><svg class="lg-svg" viewBox="0 0 44 24" aria-hidden="true"><circle cx="8" cy="12" r="3" class="f-ink"/><circle cx="22" cy="12" r="5" class="f-ink"/><circle cx="37" cy="12" r="8" class="f-ink"/></svg><span id="lg-size-text">Size = number of connections</span></li>
+            <li><svg class="lg-svg" viewBox="0 0 44 24" aria-hidden="true"><circle cx="22" cy="12" r="5" class="f-ink"/><circle cx="22" cy="12" r="9" class="ring-ox"/></svg><span>Dashed oxblood ring = VERIFY</span></li>
+            <li id="lg-glow" hidden><svg class="lg-svg" viewBox="0 0 44 24" aria-hidden="true"><circle cx="22" cy="12" r="11" class="f-ox" opacity="0.18"/><circle cx="22" cy="12" r="7.5" class="f-ox" opacity="0.2"/><circle cx="22" cy="12" r="4.5" class="f-ink"/></svg><span>Soft oxblood glow = first appeared in the conversation the timeline is on</span></li>
+            <li><svg class="lg-svg" viewBox="0 0 44 24" aria-hidden="true"><circle cx="22" cy="12" r="5" class="f-pr"/><circle cx="22" cy="12" r="8" class="ring-ink"/><circle cx="22" cy="12" r="10.5" class="ring-ink"/></svg><span>Double ring = root node</span></li>
+          </ul>
+        </div>
+      </section>
+    </aside>
+
+    <main id="canvas-wrap">
+     <div id="graph-area">
+      <div id="graph" role="img" aria-label="Three-dimensional force-directed graph of the conversation. Use the filters and search panel to explore it by keyboard."></div>
+      <aside id="history" class="panel drawer is-collapsed" aria-label="Change log">
+        <div class="panel-head">
+          <span class="mono lbl">History <span id="hist-count"></span></span>
+          <button id="btn-history-close" class="btn btn-quiet" type="button">Hide</button>
+        </div>
+        <p class="note hist-intro">How the thinking moved. Newest first; click a target to find it on the map.</p>
+        <div id="hist-filter" class="hist-filter" role="group" aria-label="Filter by action"></div>
+        <ol id="hist-list" class="hist-list"></ol>
+      </aside>
+      <div id="timeline" class="timeline" hidden>
+        <div class="tl-row">
+          <button id="tl-play" class="btn tl-btn" type="button" aria-pressed="false" title="Replay how the map grew, one conversation at a time">Replay</button>
+          <div id="tl-ticks" class="tl-ticks" role="group" aria-label="Conversations, oldest to newest"></div>
+          <button id="tl-now" class="btn tl-btn btn-quiet" type="button" hidden>Latest</button>
+          <button id="tl-spot" class="btn tl-btn" type="button" aria-pressed="false" title="Dim everything this conversation did not touch">Spotlight</button>
+        </div>
+        <p class="tl-cap" aria-live="polite"><span id="tl-title" class="tl-title"></span><span id="tl-meta" class="mono tl-meta"></span></p>
+      </div>
+      <p id="hint" class="mono">Drag to orbit &middot; scroll to zoom &middot; right-drag to pan &middot; click a node</p>
+     </div>
+      <button id="share-bar" class="share-bar" type="button" aria-expanded="true" aria-controls="share"><span class="sb-chev" aria-hidden="true">&#9662;</span><span class="sb-lbl">Hide Share</span><span id="sb-tease" class="sb-tease" aria-hidden="true"></span></button>
+      <section id="share" class="panel dock" aria-label="Share of the conversation">
+        <div class="dock-head">
+          <div class="dock-ctl">
+            <div class="dock-field">
+              <span class="mono sub" id="sh-group-lbl">Group by</span>
+              <div id="sh-group" class="seg" role="group" aria-labelledby="sh-group-lbl"></div>
+            </div>
+            <div class="dock-field">
+              <span class="mono sub" id="sh-metric-lbl">Metric</span>
+              <div id="sh-metric" class="seg" role="group" aria-labelledby="sh-metric-lbl"></div>
+            </div>
+            <div class="dock-field" id="sh-scope-field">
+              <label class="mono sub" for="sh-scope">Scope</label>
+              <select id="sh-scope" class="sel"></select>
+            </div>
+            <div class="dock-end">
+              <button id="sh-clear" class="btn btn-quiet" type="button" hidden>Clear focus</button>
+            </div>
+          </div>
+        </div>
+        <div id="sh-body" class="dock-body">
+          <div class="dock-a">
+            <h2 class="mono lbl">Share</h2>
+            <div id="sh-rows" class="sh-rows"></div>
+            <p id="sh-count" class="note" hidden></p>
+            <p id="sh-foot" class="note"></p>
+          </div>
+          <div id="sh-b" class="dock-b" hidden>
+            <h2 class="mono lbl">By conversation</h2>
+            <div id="sh-heat" class="heat-scroll"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside id="detail" class="panel" aria-label="Node detail" aria-live="polite">
+      <div class="panel-head">
+        <span class="mono lbl">Detail</span>
+        <button id="btn-detail-close" class="btn btn-quiet" type="button">Hide</button>
+      </div>
+      <div id="detail-body"></div>
+    </aside>
+  </div>
+</div>

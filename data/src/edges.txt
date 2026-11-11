@@ -1,0 +1,1 @@
+# source > target | etype | origin | label | verifyNote   (## header = basis; lines starting with # are comments)

@@ -1,0 +1,17 @@
+# id | label | type[:role] | threads | note | verifyNote   (lines starting with # are comments)
+lantern | Lantern | pr | I,II,III | The owner's alias and the root of this map (test fixture).
+polaris | Polaris | co | I | The pole star; the fixed point for finding latitude in the north.
+harrison | John Harrison | pe:ot | I,III | Clockmaker; spent decades on sea clocks that solved longitude.
+longitude-act | Longitude Act | wo | I | 1714 British act offering a prize for a practical way to find longitude at sea.
+sobel-longitude | Longitude (book) | wo | I | Dava Sobel's 1995 history of Harrison and the longitude problem.
+dava-sobel | Dava Sobel | pe:au | I | Science writer; author of Longitude.
+sourdough | Sourdough | co | II | Bread leavened by a starter; the owner treats it as a recipe to perfect.
+wild-yeast | Wild yeast | co | II | Yeast caught from flour and air rather than bought.
+tartine-bread | Tartine Bread | wo | II | Chad Robertson's 2010 baking book; the owner's sourdough method comes from it.
+chad-robertson | Chad Robertson | pe:au | II | Baker; author of Tartine Bread.
+slow-craft | Slow craft | co | III | Work whose quality comes from waiting and repetition.
+the-craftsman | The Craftsman | wo | III | Richard Sennett's 2008 book on skill built through practice.
+sennett | Richard Sennett | pe:sc | III | Sociologist; author of The Craftsman.
+kitchen-as-lab | Kitchen as lab | co | II,III | Treating the kitchen as a place to run small experiments.
+marine-chronometer | Marine chronometer | co | I,III | A clock steady enough at sea to carry home time for finding longitude.
+open-crumb | Open crumb | co | II | Large irregular holes in a loaf; a sign of a well-fermented dough.

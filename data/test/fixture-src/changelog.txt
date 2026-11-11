@@ -1,0 +1,35 @@
+# date | action | target | before | after | reason | trigger | source   (append only; guarded by changelog.lock)
+2026-01-10 | added | theme-i | - | thread I: Stars & navigation | Owner's first topic: learning the night sky | new-connection | 2026-01-10 first-light
+2026-01-10 | added | theme-ii | - | thread II: Bread & fermentation | Owner bakes weekly and brought it up unprompted | new-connection | 2026-01-10 first-light
+2026-01-10 | added | theme-iii | - | thread III: Craft & patience | Owner named the thread that ties the other two | new-connection | 2026-01-10 first-light
+2026-01-10 | added | lantern | - | Lantern [project] | Owner chose the alias Lantern | new-connection | 2026-01-10 first-light
+2026-01-10 | added | polaris | - | Polaris [concept] | Owner: the first star they learned to find | new-connection | 2026-01-10 first-light
+2026-01-10 | added | harrison | - | John Harrison [person] | Owner brought up Harrison from the book | reading | 2026-01-10 first-light
+2026-01-10 | added | longitude-act | - | Longitude Act [work] | Came up as the prize Harrison chased | reading | 2026-01-10 first-light
+2026-01-10 | added | sobel-longitude | - | Longitude (book) [work] | Owner read it last winter | reading | 2026-01-10 first-light
+2026-01-10 | added | dava-sobel | - | Dava Sobel [person] | Author of the book the owner read | reading | 2026-01-10 first-light
+2026-01-10 | added | sourdough | - | Sourdough [concept] | Owner bakes it weekly | new-connection | 2026-01-10 first-light
+2026-01-10 | added | wild-yeast | - | Wild yeast [concept] | Owner explained how their starter began | new-connection | 2026-01-10 first-light
+2026-01-10 | added | tartine-bread | - | Tartine Bread [work] | Owner named it as their method | reading | 2026-01-10 first-light
+2026-01-10 | added | chad-robertson | - | Chad Robertson [person] | Author of the owner's method book | reading | 2026-01-10 first-light
+2026-01-10 | added | slow-craft | - | Slow craft [concept] | Owner's own phrase for what bread and clocks share | new-connection | 2026-01-10 first-light
+2026-01-10 | added | the-craftsman | - | The Craftsman [work] | Owner picked it from three offered books | reading | 2026-01-10 first-light
+2026-01-10 | added | sennett | - | Richard Sennett [person] | Author of the book the owner picked | reading | 2026-01-10 first-light
+2026-01-10 | added | kitchen-as-lab | - | Kitchen as lab [concept] | Owner described their baking log | new-connection | 2026-01-10 first-light
+2026-01-10 | added | lantern > slow-craft : a | - | applies-to "lives by" | Owner: slow craft is how they want to work | new-connection | 2026-01-10 first-light
+2026-01-10 | added | lantern > polaris : a | - | applies-to "first star learned" | Owner's own story | new-connection | 2026-01-10 first-light
+2026-01-10 | added | dava-sobel > sobel-longitude : w | - | wrote | Authorship | reading | 2026-01-10 first-light
+2026-01-10 | added | sobel-longitude > harrison : a | - | applies-to "tells the story of" | Subject of the book | reading | 2026-01-10 first-light
+2026-01-10 | added | harrison > longitude-act : a | - | applies-to "answered" | Harrison's clocks answered the prize | reading | 2026-01-10 first-light
+2026-01-10 | added | chad-robertson > tartine-bread : w | - | wrote | Authorship | reading | 2026-01-10 first-light
+2026-01-10 | added | sennett > the-craftsman : w | - | wrote | Authorship | reading | 2026-01-10 first-light
+2026-01-10 | added | the-craftsman > slow-craft : i | - | influenced "gave it words" | Owner: the book named what they felt | reading | 2026-01-10 first-light
+2026-01-10 | added | sourdough > wild-yeast : a | - | applies-to "rises on" | How the bread works | new-connection | 2026-01-10 first-light
+2026-01-10 | added | sourdough > slow-craft : p | - | parallels "same patience" | Owner drew the parallel themselves | new-connection | 2026-01-10 first-light
+2026-01-10 | added | kitchen-as-lab > sourdough : a | - | applies-to | Owner's baking log is the lab | new-connection | 2026-01-10 first-light
+2026-01-10 | added | harrison > slow-craft : p | - | parallels "decades on one clock" | Claude offered it, owner moved on | argument | 2026-01-10 first-light
+2026-01-10 | added | polaris > sobel-longitude : p | - | parallels "latitude vs longitude" | Claude offered it as a contrast | argument | 2026-01-10 first-light
+2026-01-24 | added | marine-chronometer | - | Marine chronometer [concept] | Owner wanted the object itself on the map | reading | 2026-01-24 clocks-and-crumb
+2026-01-24 | added | open-crumb | - | Open crumb [concept] | Owner's current baking goal | new-connection | 2026-01-24 clocks-and-crumb
+2026-01-24 | added | harrison > marine-chronometer : a | - | applies-to "built" | Harrison's H4 | reading | 2026-01-24 clocks-and-crumb
+2026-01-24 | added | wild-yeast > open-crumb : a | - | applies-to "makes" | Owner: a lively starter gives the open crumb | new-connection | 2026-01-24 clocks-and-crumb

@@ -1,0 +1,1 @@
+# id | label | type[:role] | threads | note | verifyNote   (lines starting with # are comments)

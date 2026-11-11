@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "title": "Dialogic",
+    "version": "2.0.0",
+    "updated": "",
+    "source": "data/src",
+    "rootNode": null,
+    "latestConversation": null,
+    "conversations": []
+  },
+  "threads": [],
+  "nodes": [],
+  "edges": [],
+  "log": []
+}

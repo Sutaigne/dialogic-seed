@@ -1,0 +1,42 @@
+@delta 2026-01-10 | first-light | First light
+
+## add-threads
+I | Stars & navigation | Finding position: the pole star, longitude and the clocks that solved it. | Owner's first topic: learning the night sky | new-connection
+II | Bread & fermentation | Sourdough, wild yeast and the kitchen as a place to experiment. | Owner bakes weekly and brought it up unprompted | new-connection
+III | Craft & patience | Work whose quality comes from time and repetition more than talent. | Owner named the thread that ties the other two | new-connection
+
+## add-nodes
+lantern | Lantern | pr | I,II,III | The owner's alias and the root of this map (test fixture). | - | Owner chose the alias Lantern | new-connection
+polaris | Polaris | co | I | The pole star; the fixed point for finding latitude in the north. | - | Owner: the first star they learned to find | new-connection
+harrison | John Harrison | pe:ot | I,III | Clockmaker; spent decades on sea clocks that solved longitude. | - | Owner brought up Harrison from the book | reading
+longitude-act | Longitude Act | wo | I | 1714 British act offering a prize for a practical way to find longitude at sea. | - | Came up as the prize Harrison chased | reading
+sobel-longitude | Longitude (book) | wo | I | Dava Sobel's 1995 history of Harrison and the longitude problem. | - | Owner read it last winter | reading
+dava-sobel | Dava Sobel | pe:au | I | Science writer; author of Longitude. | - | Author of the book the owner read | reading
+sourdough | Sourdough | co | II | Bread leavened by a starter; the owner treats it as a recipe to perfect. | - | Owner bakes it weekly | new-connection
+wild-yeast | Wild yeast | co | II | Yeast caught from flour and air rather than bought. | - | Owner explained how their starter began | new-connection
+tartine-bread | Tartine Bread | wo | II | Chad Robertson's 2010 baking book; the owner's sourdough method comes from it. | - | Owner named it as their method | reading
+chad-robertson | Chad Robertson | pe:au | II | Baker; author of Tartine Bread. | - | Author of the owner's method book | reading
+slow-craft | Slow craft | co | III | Work whose quality comes from waiting and repetition. | - | Owner's own phrase for what bread and clocks share | new-connection
+the-craftsman | The Craftsman | wo | III | Richard Sennett's 2008 book on skill built through practice. | - | Owner picked it from three offered books | reading
+sennett | Richard Sennett | pe:sc | III | Sociologist; author of The Craftsman. | - | Author of the book the owner picked | reading
+kitchen-as-lab | Kitchen as lab | co | II,III | Treating the kitchen as a place to run small experiments. | - | Owner described their baking log | new-connection
+
+## add-edges
+lantern > slow-craft | a | o | lives by | - | Owner: slow craft is how they want to work | new-connection
+lantern > polaris | a | o | first star learned | - | Owner's own story | new-connection
+dava-sobel > sobel-longitude | w | s | - | - | Authorship | reading
+sobel-longitude > harrison | a | s | tells the story of | - | Subject of the book | reading
+harrison > longitude-act | a | s | answered | - | Harrison's clocks answered the prize | reading
+chad-robertson > tartine-bread | w | s | - | - | Authorship | reading
+sennett > the-craftsman | w | s | - | - | Authorship | reading
+the-craftsman > slow-craft | i | o | gave it words | - | Owner: the book named what they felt | reading
+sourdough > wild-yeast | a | s | rises on | - | How the bread works | new-connection
+sourdough > slow-craft | p | o | same patience | - | Owner drew the parallel themselves | new-connection
+kitchen-as-lab > sourdough | a | o | - | - | Owner's baking log is the lab | new-connection
+harrison > slow-craft | p | c | decades on one clock | Claude's parallel; owner did not confirm | Claude offered it, owner moved on | argument
+polaris > sobel-longitude | p | c | latitude vs longitude | Claude's contrast; owner did not confirm | Claude offered it as a contrast | argument
+
+## owner
+lantern
+
+## touched

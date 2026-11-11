@@ -1,0 +1,30 @@
+@delta 2026-02-07 | night-sky-bread | Night sky and bread
+
+## add-threads
+IV | Music & time | Practice, repetition and variation in music. | Owner opened a new line of thought on music | new-connection
+
+## add-nodes
+goldberg-variations | Goldberg Variations | wo | IV,III | Bach's aria with thirty variations; the owner's long practice piece. | - | Owner named it as the piece they practise | reading
+
+## add-edges
+goldberg-variations > slow-craft | p | o | thirty variations, one patience | - | Owner: practising it is slow craft in sound | new-connection
+sennett > harrison | i | c | - | Claude's link from Sennett's craftsman to Harrison; owner didn't confirm | Claude proposal, unconfirmed | argument
+
+## modify
+wild-yeast | note | Yeast caught from flour and air; the owner's starter is three years old. | Owner gave the starter's age | new-connection
+kitchen-as-lab > sourdough : a | label | proving ground | Owner reframed the relation | argument
+
+## remove
+polaris > sobel-longitude : p | Owner dropped this as a reach | change-of-mind
+
+## reverse
+sourdough | note | Bread leavened by a starter; its flavour comes from time more than from the recipe. | Sourdough is a recipe to perfect | Owner accepted the correction | correction
+
+## reweight
+sennett | 2 | Owner: "Sennett is the one I'd keep if I could keep one"
+
+## touched
+wild-yeast | 3
+open-crumb | 1
+kitchen-as-lab > sourdough : a | 2
+sourdough | 1

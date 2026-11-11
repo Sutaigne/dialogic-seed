@@ -1,0 +1,1 @@
+# id | field | subfield   (Wikipedia Contents/Categories framework; field = one of the 13 top-level headings verbatim; assigned by Claude, one primary per node)

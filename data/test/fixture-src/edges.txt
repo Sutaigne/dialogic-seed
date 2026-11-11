@@ -1,0 +1,17 @@
+# source > target | etype | origin | label | verifyNote   (## header = basis; lines starting with # are comments)
+## conversation
+lantern > slow-craft | a | o | lives by
+lantern > polaris | a | o | first star learned
+dava-sobel > sobel-longitude | w | s
+sobel-longitude > harrison | a | s | tells the story of
+harrison > longitude-act | a | s | answered
+chad-robertson > tartine-bread | w | s
+sennett > the-craftsman | w | s
+the-craftsman > slow-craft | i | o | gave it words
+sourdough > wild-yeast | a | s | rises on
+sourdough > slow-craft | p | o | same patience
+kitchen-as-lab > sourdough | a | o
+harrison > slow-craft | p | c | decades on one clock | Claude's parallel; owner did not confirm
+polaris > sobel-longitude | p | c | latitude vs longitude | Claude's contrast; owner did not confirm
+harrison > marine-chronometer | a | s | built
+wild-yeast > open-crumb | a | s | makes

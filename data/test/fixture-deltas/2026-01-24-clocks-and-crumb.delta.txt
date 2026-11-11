@@ -1,0 +1,14 @@
+@delta 2026-01-24 | clocks-and-crumb | Clocks and crumb
+
+## add-nodes
+marine-chronometer | Marine chronometer | co | I,III | A clock steady enough at sea to carry home time for finding longitude. | - | Owner wanted the object itself on the map | reading
+open-crumb | Open crumb | co | II | Large irregular holes in a loaf; a sign of a well-fermented dough. | - | Owner's current baking goal | new-connection
+
+## add-edges
+harrison > marine-chronometer | a | s | built | - | Harrison's H4 | reading
+wild-yeast > open-crumb | a | s | makes | - | Owner: a lively starter gives the open crumb | new-connection
+
+## touched
+slow-craft | 2
+harrison | 2
+sourdough > slow-craft : p | 1

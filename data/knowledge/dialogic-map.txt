@@ -1,0 +1,12 @@
+# DIALOGIC MAP: project knowledge. Generated from data/src (latest conversation ).
+# Do not edit. Claude Code regenerates this file after every merge; replace it in the project each time.
+# Three sections follow, each the exact contents of one source file. Line formats: first comment of each section, and DELTA-FORMAT.md.
+
+==== threads.txt ====
+# id | title | summary   (lines starting with # are comments)
+
+==== nodes.txt ====
+# id | label | type[:role] | threads | note | verifyNote   (lines starting with # are comments)
+
+==== edges.txt ====
+# source > target | etype | origin | label | verifyNote   (## header = basis; lines starting with # are comments)

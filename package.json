@@ -1,0 +1,14 @@
+{
+  "name": "dialogic",
+  "private": true,
+  "version": "2.0.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "generate": "node data/src/generate.mjs",
+    "validate": "node data/validate.mjs",
+    "test": "node data/test/run.mjs",
+    "build": "node build.mjs",
+    "export": "node scripts/export.mjs",
+    "run": "npm run generate && npm run validate && npm run test && npm run build && npm run export"
+  }
+}

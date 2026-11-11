@@ -1,0 +1,38 @@
+# date | conversation | ref | count   (ref = node id or "source > target : etype"; append only)
+2026-01-10 | first-light | theme-i | 1
+2026-01-10 | first-light | theme-ii | 1
+2026-01-10 | first-light | theme-iii | 1
+2026-01-10 | first-light | lantern | 1
+2026-01-10 | first-light | polaris | 1
+2026-01-10 | first-light | harrison | 1
+2026-01-10 | first-light | longitude-act | 1
+2026-01-10 | first-light | sobel-longitude | 1
+2026-01-10 | first-light | dava-sobel | 1
+2026-01-10 | first-light | sourdough | 1
+2026-01-10 | first-light | wild-yeast | 1
+2026-01-10 | first-light | tartine-bread | 1
+2026-01-10 | first-light | chad-robertson | 1
+2026-01-10 | first-light | slow-craft | 1
+2026-01-10 | first-light | the-craftsman | 1
+2026-01-10 | first-light | sennett | 1
+2026-01-10 | first-light | kitchen-as-lab | 1
+2026-01-10 | first-light | lantern > slow-craft : a | 1
+2026-01-10 | first-light | lantern > polaris : a | 1
+2026-01-10 | first-light | dava-sobel > sobel-longitude : w | 1
+2026-01-10 | first-light | sobel-longitude > harrison : a | 1
+2026-01-10 | first-light | harrison > longitude-act : a | 1
+2026-01-10 | first-light | chad-robertson > tartine-bread : w | 1
+2026-01-10 | first-light | sennett > the-craftsman : w | 1
+2026-01-10 | first-light | the-craftsman > slow-craft : i | 1
+2026-01-10 | first-light | sourdough > wild-yeast : a | 1
+2026-01-10 | first-light | sourdough > slow-craft : p | 1
+2026-01-10 | first-light | kitchen-as-lab > sourdough : a | 1
+2026-01-10 | first-light | harrison > slow-craft : p | 1
+2026-01-10 | first-light | polaris > sobel-longitude : p | 1
+2026-01-24 | clocks-and-crumb | slow-craft | 2
+2026-01-24 | clocks-and-crumb | harrison | 2
+2026-01-24 | clocks-and-crumb | sourdough > slow-craft : p | 1
+2026-01-24 | clocks-and-crumb | marine-chronometer | 1
+2026-01-24 | clocks-and-crumb | open-crumb | 1
+2026-01-24 | clocks-and-crumb | harrison > marine-chronometer : a | 1
+2026-01-24 | clocks-and-crumb | wild-yeast > open-crumb : a | 1

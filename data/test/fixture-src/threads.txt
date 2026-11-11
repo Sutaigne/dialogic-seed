@@ -1,0 +1,4 @@
+# id | title | summary   (lines starting with # are comments)
+I | Stars & navigation | Finding position: the pole star, longitude and the clocks that solved it.
+II | Bread & fermentation | Sourdough, wild yeast and the kitchen as a place to experiment.
+III | Craft & patience | Work whose quality comes from time and repetition more than talent.

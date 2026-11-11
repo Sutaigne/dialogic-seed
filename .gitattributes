@@ -1,0 +1,2 @@
+# Keep bytes exactly as committed on every platform (graph JSON, knowledge file and dist must reproduce byte-for-byte).
+* -text
