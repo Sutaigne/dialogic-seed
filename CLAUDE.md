@@ -45,7 +45,8 @@ Then commit and push (a PR if the owner works that way), and hand the owner **`o
 **(first run)** also tell the owner, plainly:
 1. their map's link (the new artifact URL);
 2. in the Project's knowledge: **delete `FIRST-CONVERSATION.md`**, upload `dialogic-map.txt`; keep `DELTA-FORMAT.md`;
-3. from now on: talk, say "update the map", then tell Claude Code "merge the inbox" (or paste), then replace `dialogic-map.txt`.
+3. from now on: talk, say "update the map", then tell Claude Code "merge the inbox" (or paste), then replace `dialogic-map.txt`;
+4. recommended, if not done yet: connect **Hugging Face** in claude.ai (https://claude.ai/customize/connectors, how-to https://support.claude.com/en/articles/11176164) so Analyze recommends real public projects from a live search. Without it the picks come from memory and Analyze shows the same note with these links.
 
 Update `OPEN-THREADS.md`: the `Live:` line (artifact URL and version number, v1 on the first run) and one line under `Banked`.
 

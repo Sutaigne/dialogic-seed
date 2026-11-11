@@ -447,6 +447,7 @@
     if (st.note) foot = st.note + (foot ? ' ' + foot : '');
     $('an-foot').textContent = foot;
     $('an-foot').hidden = !foot;
+    $('an-connect').hidden = !(st.connect && !st.connectDismissed && engine === 'claude');
     $('an-err').textContent = st.err;
     $('an-err').hidden = !st.err;
   }
@@ -456,6 +457,7 @@
     btn.setAttribute('aria-expanded', 'true');
     document.body.classList.add('an-open');
     findEngine();
+    if (st.last && st.last.search === 'memory') st.connect = true;
     render();
     setTimeout(function () { $('an-close').focus(); }, 0);
   }
@@ -475,7 +477,9 @@
     var ctl = st.ctl;
     render();
     var onText = function (t) { st.text = clean(t); render(); };
+    var used = 'memory';
     searchMode().then(function (mode) {
+      used = mode;
       if (ctl.signal.aborted) throw { code: 'cancelled' };
       var text = prompt(d, mode);
       if (engine === 'claude') {
@@ -501,7 +505,8 @@
     }).then(function (r) {
       st.text = clean(r.text);
       if (r.truncated) st.note = 'The reading was cut short at the length limit.';
-      st.last = { text: st.text, at: new Date().toISOString(), engine: engine, prompts: {} };
+      st.last = { text: st.text, at: new Date().toISOString(), engine: engine, search: used, prompts: {} };
+      if (used === 'memory' && engine === 'claude') st.connect = true;
       if ((d.meta || {}).latestConversation) st.last.version = 'as of ' + d.meta.latestConversation.date;
       copied = {};
       saveLast();
@@ -556,6 +561,7 @@
   function draft(i) {
     var proj = projectsOf(st.last ? st.last.text : '')[i];
     if (!proj || drafting[proj.name]) return;
+    if (engine === 'claude') searchMode().then(function (m) { if (m !== 'hf' && !st.connectDismissed) { st.connect = true; render(); } });
     var have = st.last.prompts && st.last.prompts[proj.name];
     if (have) { copy(have, i, false); return; }
     drafting[proj.name] = true; st.err = '';
@@ -645,6 +651,7 @@
   $('an-close').addEventListener('click', close);
   $('an-scrim').addEventListener('click', close);
   $('an-go').addEventListener('click', run);
+  $('an-connect-x').addEventListener('click', function () { st.connectDismissed = true; render(); });
   $('an-out').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-draft]') : null;
     if (b && !b.disabled) draft(Number(b.getAttribute('data-draft')));
