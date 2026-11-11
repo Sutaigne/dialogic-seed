@@ -739,7 +739,7 @@
     filters: { el: filtersEl, btn: $('btn-filters') },
     detail: { el: detailEl, btn: $('btn-detail') },
     history: { el: historyEl, btn: $('btn-history') },
-    share: { el: shareEl, btn: $('btn-share') }
+    share: { el: shareEl, btn: $('share-bar') }  /* the bar under the map is the only Share toggle */
   };
   function setPanel(which, open) {
     var p = PANELS[which];
@@ -1773,7 +1773,6 @@
     $('btn-size-strength').addEventListener('click', function () { setSize('strength', true); });
     $('btn-ink-even').addEventListener('click', function () { setInk('even', true); });
     $('btn-ink-recency').addEventListener('click', function () { setInk('recency', true); });
-    $('btn-share').addEventListener('click', function () { setPanel('share', !isOpen('share')); });
     $('share-bar').addEventListener('click', function () { setPanel('share', !isOpen('share')); });
     $('btn-history').addEventListener('click', function () { setPanel('history', !isOpen('history')); });
     $('btn-history-close').addEventListener('click', function () { setPanel('history', false); });
