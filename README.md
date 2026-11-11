@@ -17,6 +17,10 @@ You need a claude.ai account with Projects and Claude Code, and a GitHub account
 5. **Merge it:** open Claude Code on your copy of the repo and say "merge the first delta" (paste the block, or "merge the inbox"). It builds your map, publishes it, gives you the link, and hands you a file called `dialogic-map.txt`.
 6. **Swap the files in the Project's knowledge:** delete `FIRST-CONVERSATION.md` and upload `dialogic-map.txt`.
 
+## Sharing a copy with someone
+
+Before you hand it over, you can fill the `intel:` block in `chat/FIRST-CONVERSATION.md` with a few lines about them (interests, what they might want a map for, how they like to talk). Their first conversation uses it to start in the right place without reciting it. Leave it as `(none)` to skip. They upload that file themselves, so assume they may read it.
+
 ## After that, every conversation
 
 Talk → "update the map" → in Claude Code, "merge the inbox" (or paste) → replace `dialogic-map.txt` in the Project with the new one.
