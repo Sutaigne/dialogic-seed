@@ -31,8 +31,10 @@ node data/validate.mjs          # must end "OK: all checks passed."
 node data/test/run.mjs          # all pass on the frozen made-up fixture; real files are never touched
 node build.mjs                  # dist/dialogic-map.html (~2 MB+, fonts + graph bundle inlined)
 # 2. publish dist/dialogic-map.html with the Artifact tool:
-#    ordinary run: update the artifact whose URL is in SETTINGS.md (read it once in the session first if the tool asks).
-#    (first run): SETTINGS.md has no artifact URL yet. Publish a NEW artifact (title "Dialogic", icon "map"),
+#    ordinary run: update the artifact whose URL is in SETTINGS.md (read it once in the session first if the tool asks;
+#    omit `capabilities` so the stored {sample: {}} carries forward).
+#    (first run): SETTINGS.md has no artifact URL yet. Publish a NEW artifact (title "Dialogic", icon "map",
+#    capabilities {sample: {}} so the Analyze sheet can run on the owner's Claude account),
 #    then write its URL into SETTINGS.md. This is the only time a new artifact is ever created.
 node scripts/export.mjs         # out/knowledge/dialogic-map.txt + out/reports/run-summary.md
 ```
@@ -75,7 +77,7 @@ If the owner uses Google Drive, the chat side saves each delta as a plain text f
 - Themes come from `threads.txt`; `belongs-to` edges are generated, never written.
 - Engagement counts live in `mentions.txt`; strength is `1 − e^(−score/2)` from `1 + ln(count)` per conversation with recency decay (details in `docs/DELTA-FORMAT.md`). Nothing sets it by hand.
 - `build.mjs` and `scripts/export.mjs` refuse a blank map: there is nothing to publish before the first merge.
-- The viewer (`src/viewer.*`) is an ES5 IIFE; `build.mjs` inlines `vendor/graph-bundle.js` (prebuilt 3d-force-graph + three) and the fonts. Rebuilding the bundle needs `vendor/node_modules` (`npm ci` in `vendor/`, see `vendor/README.md`); the committed bundle is enough for normal runs.
+- The viewer (`src/viewer.*`, plus `src/analyze.js` for the Analyze sheet) is an ES5 IIFE; `build.mjs` inlines `vendor/graph-bundle.js` (prebuilt 3d-force-graph + three) and the fonts. Rebuilding the bundle needs `vendor/node_modules` (`npm ci` in `vendor/`, see `vendor/README.md`); the committed bundle is enough for normal runs.
 - Tests run on `data/test/fixture-src`, a made-up map (owner "Lantern") built from `data/test/fixture-deltas/` by `data/test/build-fixture.mjs`. Rebuild it only when the merge rules change.
 - Screenshots for checking layout: `tools/shot.mjs` (headless Chrome via CDP); see `docs/REPORTS.md`.
 - Deltas are append-only history: `data/deltas/` keeps every merged block.
