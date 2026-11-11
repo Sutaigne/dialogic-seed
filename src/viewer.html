@@ -6,6 +6,7 @@
     </div>
     <nav id="threadnav" aria-label="Threads"></nav>
     <div class="top-actions">
+      <button id="btn-analyze" class="btn" type="button" aria-expanded="false" aria-controls="analyze" aria-haspopup="dialog">Analyze</button>
       <button id="btn-share" class="btn" type="button" aria-expanded="true" aria-controls="share">Share</button>
       <button id="btn-history" class="btn" type="button" aria-expanded="false" aria-controls="history" hidden>History</button>
       <button id="btn-filters" class="btn" type="button" aria-expanded="true" aria-controls="filters">Filters</button>
@@ -179,5 +180,46 @@
       </div>
       <div id="detail-body"></div>
     </aside>
+  </div>
+
+  <div id="analyze" class="an" role="dialog" aria-modal="true" aria-labelledby="an-title" hidden>
+    <div id="an-scrim" class="an-scrim"></div>
+    <section class="an-sheet">
+      <div class="panel-head an-head">
+        <span class="mono lbl" id="an-title">Analyze</span>
+        <button id="an-close" class="btn btn-quiet" type="button">Close</button>
+      </div>
+      <div class="an-body">
+        <p class="an-lede">A reading of you, drawn from the map: what is distinctly yours, what is admirable in where your attention goes, your voice, parallels you may not have seen, and agent projects that could fuse your passions.</p>
+        <p id="an-scope" class="mono sub an-scope"></p>
+        <p id="an-connecting" class="note">Connecting&hellip;</p>
+
+        <form id="an-keyform" class="an-keyform" hidden autocomplete="off">
+          <h2 class="mono lbl">Add an API key</h2>
+          <p class="note">Outside claude.ai there is no Claude account to run on, so this copy of the map needs an Anthropic API key. It stays in this browser and is sent only to api.anthropic.com; it is never written into the map, the repository, or a published page.</p>
+          <label class="mono sub" for="an-key">Anthropic API key</label>
+          <input id="an-key" class="an-input" type="password" placeholder="sk-ant-&hellip;" spellcheck="false" autocapitalize="off" autocomplete="off">
+          <label class="chk an-chk"><input id="an-remember" type="checkbox" checked><span class="box"></span><span class="txt">Remember on this device</span></label>
+          <div class="an-row">
+            <button class="btn an-primary" type="submit">Save key</button>
+            <button id="an-key-cancel" class="btn btn-quiet" type="button">Cancel</button>
+          </div>
+        </form>
+
+        <div id="an-run-row" class="an-run" hidden>
+          <div class="seg" role="group" aria-label="Depth">
+            <button id="an-depth-standard" class="btn" type="button" aria-pressed="true">Standard</button>
+            <button id="an-depth-deep" class="btn" type="button" aria-pressed="false">Deep</button>
+          </div>
+          <button id="an-go" class="btn an-primary" type="button">Analyze</button>
+        </div>
+        <p id="an-engine" class="mono sub an-engine"></p>
+        <p id="an-err" class="an-err" role="alert" hidden></p>
+
+        <p id="an-empty" class="note an-empty" hidden>Nothing written yet. Deep thinks longer and takes a minute or two.</p>
+        <article id="an-out" class="an-out" aria-live="polite" hidden></article>
+        <p id="an-foot" class="note an-foot" hidden></p>
+      </div>
+    </section>
   </div>
 </div>

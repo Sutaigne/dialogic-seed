@@ -52,6 +52,7 @@ const out = [
   '<script type="application/json" id="graph-data">' + safeJson(JSON.stringify(graph)) + '</script>',
   '<script>' + safeJs(rd('vendor/graph-bundle.js')) + '</script>',
   '<script>' + safeJs(rd('src/viewer.js')) + '</script>',
+  '<script>' + safeJs(rd('src/analyze.js')) + '</script>',
   '',
 ].join('\n');
 
