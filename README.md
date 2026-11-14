@@ -34,3 +34,7 @@ Requires Node 22 or newer. No npm install for the normal run; the graph library 
 ```bash
 node data/src/generate.mjs && node data/validate.mjs && node data/test/run.mjs && node build.mjs && node scripts/export.mjs
 ```
+
+## Licence
+
+MIT: see `LICENSE`. The viewer bundles three.js, 3d-force-graph and the libraries they depend on, and two fonts (Newsreader and IBM Plex Mono, under the SIL Open Font License); their notices are in `THIRD-PARTY-NOTICES.md`.
