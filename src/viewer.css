@@ -277,6 +277,15 @@ html, body {
 /* ---------- segmented ---------- */
 .seg { display: grid; grid-template-columns: 1fr 1fr; }
 .seg .btn:first-child { border-right-width: 0; }
+.seg.seg-3 { grid-template-columns: 1fr 1fr 1fr; }
+.seg.seg-3 .btn:not(:last-child) { border-right-width: 0; }
+.seg.seg-4 { grid-template-columns: repeat(4, 1fr); }
+.seg.seg-4 .btn { padding-left: 2px; padding-right: 2px; letter-spacing: 0.1em; }
+.seg.seg-4 .btn:not(:last-child) { border-right-width: 0; }
+#orbit-wrap .btn-block { margin-top: 10px; }
+.gcol-legend { margin-top: 8px; }
+.gcol-legend li { align-items: baseline; gap: 8px; min-height: 22px; }
+.gcol-th { color: var(--ink-3); margin-left: 4px; }
 
 /* ---------- checkboxes ---------- */
 .checks { display: flex; flex-direction: column; gap: 0; }

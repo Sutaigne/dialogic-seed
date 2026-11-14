@@ -50,6 +50,30 @@
           </div>
           <p class="note">Recency prints an idea paler the more conversations have passed since you last returned to it.</p>
         </div>
+        <div id="globes-wrap">
+          <div class="mono sub sizeby-lbl">Globes</div>
+          <div class="seg seg-4" role="group" aria-label="Thread globes">
+            <button id="btn-globes-off" class="btn" type="button" aria-pressed="true">Off</button>
+            <button id="btn-globes-on" class="btn" type="button" aria-pressed="false">On</button>
+            <button id="btn-globes-only" class="btn" type="button" aria-pressed="false">Only</button>
+            <button id="btn-globes-orbits" class="btn" type="button" aria-pressed="false">Orbits</button>
+          </div>
+          <p class="note">A globe houses each thread&rsquo;s cluster; a deeper globe is a thread you return to more often. Only hides the ideas and shows how the threads connect: tap a globe to pick it, tap it again to go inside.</p>
+          <div id="orbit-wrap" hidden>
+            <button id="btn-orbit-pause" class="btn btn-block" type="button" aria-pressed="false">Pause</button>
+            <p class="note">Orbits sets the globes circling <span id="orbit-root"></span>. The closer the ring, the more often you return to that thread, and closer rings turn faster. Rings are bands: where a globe sits along its ring means nothing. Step the timeline to watch threads move in and out. Tap a globe to stop and read it.</p>
+          </div>
+          <div id="gcol-wrap" hidden>
+            <div class="mono sub sizeby-lbl">Globe colour</div>
+            <div class="seg seg-3" role="group" aria-label="Colour globes by">
+              <button id="btn-gcol-ink" class="btn" type="button" aria-pressed="true">Ink</button>
+              <button id="btn-gcol-threads" class="btn" type="button" aria-pressed="false">Threads</button>
+              <button id="btn-gcol-fields" class="btn" type="button" aria-pressed="false">Fields</button>
+            </div>
+            <p class="note">Ink: one ink for all. Threads: a hue for each thread. Fields: a hue for the field most of a thread&rsquo;s ideas are filed under, so threads of a kind share a colour.</p>
+            <ul id="gcol-legend" class="lg-list gcol-legend" hidden></ul>
+          </div>
+        </div>
         <button id="btn-reset" class="btn btn-block" type="button">Reset view</button>
       </section>
 

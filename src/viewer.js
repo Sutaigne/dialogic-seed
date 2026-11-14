@@ -189,6 +189,16 @@
   }
   function saveInk(v) { try { window.localStorage.setItem('mm-ink', v); } catch (e) { /* storage unavailable */ } }
   function saveSize(v) { try { window.localStorage.setItem('mm-size-by', v); } catch (e) { /* storage unavailable */ } }
+  function loadGlobes() {
+    try { var v = window.localStorage.getItem('mm-globes'); if (v === 'on' || v === 'off') return v; } catch (e) { /* storage unavailable */ }
+    return 'off';
+  }
+  function saveGlobes(v) { try { window.localStorage.setItem('mm-globes', v); } catch (e) { /* storage unavailable */ } }
+  function loadGlobeColor() {
+    try { var v = window.localStorage.getItem('mm-globe-color'); if (v === 'ink' || v === 'threads' || v === 'fields') return v; } catch (e) { /* storage unavailable */ }
+    return 'ink';
+  }
+  function saveGlobeColor(v) { try { window.localStorage.setItem('mm-globe-color', v); } catch (e) { /* storage unavailable */ } }
   function loadShare() {
     var d = { group: 'thread', metric: 'engagement', scope: '', expanded: {} };
     try {
@@ -235,6 +245,8 @@
     upto: LASTC,      // timeline cursor: index into CONV_ORDER; later items are hidden
     spot: false,      // spotlight: dim everything the cursor conversation did not touch
     ink: HAS_TIME ? loadInk() : 'even',
+    globes: loadGlobes(), // 'off' | 'on' | 'only' | 'orbits': a translucent sphere housing each thread's cluster; only = the globes and how they connect; orbits = the globes circling the root, closer the more a thread is returned to
+    globeColor: loadGlobeColor(), // 'ink' | 'threads' (a hue per thread) | 'fields' (a hue per field most of the thread's ideas fall in)
     pathFrom: null,   // node id waiting for a second pick
     path: null        // { nodes: [ids], links: [link], set: Set, lset: Set }
   };
@@ -443,6 +455,7 @@
   function bigLabel(n) { return n.type === 'theme' || n.id === ROOT || TOP_IDS.has(n.id); }
   function wantLabel(n) {
     if (!visN.get(n.id)) return false;
+    if (n.type === 'theme' && globeShownFor(n)) return false; /* the globe carries the thread's name */
     if (S.path) return S.path.set.has(n.id);
     if (S.sel) return n.id === S.sel || selN.has(n.id) || (alwaysLabel(n) && !dimNode(n) && (!FAR || bigLabel(n)));
     if (S.spot) return inCur(n) && (isNew(n) || bigLabel(n) || !FAR);
@@ -485,6 +498,7 @@
     if (o.ring) o.ring.material.opacity = dim ? 0.2 : 1;
   }
   function updateSprites() {
+    updateGlobes(true);
     glows.clear();
     nodes.forEach(function (n) {
       var o = objs.get(n.id);
@@ -529,6 +543,7 @@
     var far = camDist > 780;
     if (far !== FAR) { FAR = far; updateSprites(); }
     else scaleLabels();
+    scaleGlobeLabels();
   }
   /* one faint ink wash behind each thread's cluster, like a stain in the paper */
   var washes = [], TEX_WASH = null;
@@ -562,7 +577,7 @@
         if (n._ti !== w.ti || n.x == null || !visN.get(n.id)) return;
         sx += n.x; sy += n.y; sz += n.z; c++; mem.push(n);
       });
-      if (c < 3 || !S.threads.has(w.id) || S.mode !== 'cluster' || S.path) { w.sp.visible = false; return; }
+      if (c < 3 || !S.threads.has(w.id) || S.mode !== 'cluster' || S.path || globesShown()) { w.sp.visible = false; return; }
       sx /= c; sy /= c; sz /= c;
       var d2 = 0;
       mem.forEach(function (n) { d2 += (n.x - sx) * (n.x - sx) + (n.y - sy) * (n.y - sy) + (n.z - sz) * (n.z - sz); });
@@ -571,6 +586,638 @@
       w.sp.scale.set(rms * 4.2, rms * 4.2, 1);
       w.sp.material.opacity = S.sel || S.spot || S.focus ? 0.45 : 1;
       w.sp.visible = true;
+    });
+  }
+  /* ------------------------------------------------------------------ *
+   * Globes: one translucent sphere roughly housing each thread's cluster
+   * ------------------------------------------------------------------ */
+  /* A bubble: clear at the centre, ink gathering toward the edge. One ink for all; a thread returned to more often prints deeper.
+     weight 1-3: how heavy the edge is. fill: the even tint across the disc.
+     veil: a globe tints the ideas inside and behind it (ideas in front stay clean); off, globes sit under everything.
+     reach: radius as a multiple of the cluster's spread; 1.45 holds about 89% of a thread's ideas, 0.9 about 63%. */
+  var GL = { weight: 2, fill: 0.05, veil: true, reach: 1.45 };
+  var globes = [], GLOBE_GEO = null;
+  /* Colour: one ink; or a pigment per thread, stepped so neighbouring thread numbers sit far apart on the wheel;
+     or a pigment per field (the Wikipedia heading most of a thread's ideas are filed under), so threads of a kind share a hue. */
+  var GLOBE_HUES = ['#8A2A35', '#2E7480', '#A8862F', '#6F4E92', '#3F7A45', '#9E3F62', '#3A6A96', '#A85A2A', '#2F7362', '#8E4684', '#7E8433', '#4A5296'];
+  var FIELD_HUES = {
+    'Culture and the arts': '#8A2A35', 'Religion and belief systems': '#B08A2E', 'History and events': '#5B4A8E',
+    'Natural and physical sciences': '#2E7480', 'Society and social sciences': '#3A6A96', 'Technology and applied sciences': '#3F7A45',
+    'People and self': '#B0622E', 'Philosophy and thinking': '#8E4684', 'Geography and places': '#7E8433', 'Health and fitness': '#5F8F86',
+    'Human activities': '#6B5A3E', 'Mathematics and logic': '#4A5296', 'General reference': '#6F6F6F'
+  };
+  /* each thread's leading field, from the ideas whose first thread it is; a tie goes to the field that is rarer across the whole map */
+  var THREAD_FIELD = (function () {
+    var all = {}, per = THREADS.map(function () { return {}; }), tot = THREADS.map(function () { return 0; });
+    nodes.forEach(function (n) {
+      if (n.type === 'theme' || !n.field) return;
+      all[n.field] = (all[n.field] || 0) + 1;
+      per[n._ti][n.field] = (per[n._ti][n.field] || 0) + 1;
+      tot[n._ti]++;
+    });
+    return per.map(function (m, ti) {
+      var best = null;
+      Object.keys(m).forEach(function (f) {
+        if (!best || m[f] > m[best] || (m[f] === m[best] && all[f] < all[best])) best = f;
+      });
+      return best ? { field: best, share: m[best] / tot[ti] } : null;
+    });
+  })();
+  function globeHue(g) {
+    if (S.globeColor === 'threads') return GLOBE_HUES[g.ti % GLOBE_HUES.length];
+    if (S.globeColor === 'fields') { var tf = THREAD_FIELD[g.ti]; return (tf && FIELD_HUES[tf.field]) || '#6F6F6F'; }
+    return INK;
+  }
+  function globesShown() { return S.globes !== 'off' && S.mode === 'cluster' && !S.path; }
+  function globeShownFor(n) { var g = globes[n._ti]; return !!(g && g.shown); }
+  /* the two views without the ideas: Only (globes where the map puts them) and Orbits (globes circling the root) */
+  function onlyOn() { return (S.globes === 'only' || S.globes === 'orbits') && globesShown(); }
+  function orbitOn() { return S.globes === 'orbits' && globesShown(); }
+  var themeOf = [];
+  nodes.forEach(function (n) { if (n.type === 'theme') themeOf[n._ti] = n; });
+  /* the thread whose theme node is selected, or -1 */
+  function pickedGlobe() { var n = S.sel ? byId.get(S.sel) : null; return n && n.type === 'theme' ? n._ti : -1; }
+  var graphGrp = null;
+  function graphGroup() {
+    if (!graphGrp && G) graphGrp = G.scene().children.filter(function (c) { return typeof c.tickFrame === 'function'; })[0] || null;
+    return graphGrp;
+  }
+  var GLOBE_VS = [
+    'uniform float fogNear; uniform float fogFar;',
+    'varying vec3 vN; varying vec3 vV; varying float vFade;',
+    'void main() {',
+    '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
+    '  vN = normalMatrix * normal; vV = -mv.xyz;',
+    '  vec3 c = modelViewMatrix[3].xyz;',              /* globe centre in view space */
+    '  float R = length(modelViewMatrix[0].xyz);',     /* uniform scale = radius */
+    '  vFade = smoothstep(1.1, 1.9, length(c) / R) * (1.0 - smoothstep(fogNear, fogFar, -c.z));',
+    '  gl_Position = projectionMatrix * mv;',
+    '}'].join('\n');
+  var GLOBE_FS = [
+    'uniform vec3 uColor;',
+    'uniform float uFill; uniform float uRim; uniform float uPower; uniform float uOpacity;',
+    'varying vec3 vN; varying vec3 vV; varying float vFade;',
+    'void main() {',
+    '  float d = abs(dot(normalize(vN), normalize(vV)));',   /* 1 at the centre of the disc, 0 at the limb */
+    '  float w = max(fwidth(d), 1e-4);',
+    '  float a = clamp(uFill + uRim * pow(1.0 - d, uPower), 0.0, 1.0);',
+    '  gl_FragColor = vec4(uColor, a * smoothstep(0.0, w, d) * vFade * uOpacity);',   /* the last pixel of the limb is feathered */
+    '  #include <colorspace_fragment>',
+    '}'].join('\n');
+  function globeMaterial() {
+    return new THREE.ShaderMaterial({
+      uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
+        uColor: { value: new THREE.Color(INK) },
+        uFill: { value: 0.05 }, uRim: { value: 0.55 }, uPower: { value: 2.6 }, uOpacity: { value: 1 }
+      }]),
+      vertexShader: GLOBE_VS, fragmentShader: GLOBE_FS,
+      transparent: true, depthWrite: false, depthTest: false, side: THREE.FrontSide, fog: true
+    });
+  }
+  function globeLabel() {
+    var s = new SpriteText('', 7, INK);
+    s.fontFace = "'Newsreader', Georgia, serif";
+    s.fontWeight = 'italic 500';
+    s.backgroundColor = hexA(BONE, 0.72);
+    s.padding = [2, 1];
+    s.material.depthWrite = false;
+    s.material.depthTest = false;
+    s.renderOrder = 20;
+    s.frustumCulled = false;
+    return s;
+  }
+  function buildGlobes() {
+    GLOBE_GEO = new THREE.SphereGeometry(1, 64, 32);
+    THREADS.forEach(function (t, ti) {
+      var grp = new THREE.Group();
+      var mesh = new THREE.Mesh(GLOBE_GEO, globeMaterial());
+      mesh.renderOrder = -4;
+      mesh.frustumCulled = false;
+      grp.add(mesh);
+      var label = globeLabel();
+      grp.add(label);
+      /* in the globes-only view each globe shows a core, sized by how many ideas it holds */
+      var core = new THREE.Mesh(GLOBE_GEO, new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.8, depthWrite: false, depthTest: false }));
+      core.renderOrder = -1;
+      core.visible = false;
+      grp.add(core);
+      grp.visible = false;
+      G.scene().add(grp);
+      globes.push({ id: t.id, title: t.title, ti: ti, grp: grp, mesh: mesh, label: label, core: core,
+        c: null, R: 0, tc: null, tR: 0, shown: false, op: 1, text: null, color: null, bx: 0, by: 0, stats: null });
+    });
+    CONN_GEO = new THREE.CylinderGeometry(1, 1, 1, 8, 1, true);
+    connGrp = new THREE.Group();
+    connGrp.visible = false;
+    G.scene().add(connGrp);
+  }
+  /* centre and radius that a few far-flung members cannot drag: far members count for less (Huber weights) */
+  function measureGlobe(g) {
+    var mem = [], sx = 0, sy = 0, sz = 0;
+    nodes.forEach(function (n) {
+      if (n._ti !== g.ti || n.x == null || !visN.get(n.id)) return;
+      mem.push(n); sx += n.x; sy += n.y; sz += n.z;
+    });
+    var c = mem.length;
+    if (c < 3) return false;
+    var mx = sx / c, my = sy / c, mz = sz / c, md = 0, ws = [];
+    mem.forEach(function (n) {
+      var d = Math.sqrt((n.x - mx) * (n.x - mx) + (n.y - my) * (n.y - my) + (n.z - mz) * (n.z - mz));
+      ws.push(d); md += d;
+    });
+    var lim = 1.5 * md / c, W = 0;
+    sx = sy = sz = 0;
+    mem.forEach(function (n, i) {
+      var w = ws[i] <= lim ? 1 : lim / ws[i];
+      ws[i] = w; W += w; sx += w * n.x; sy += w * n.y; sz += w * n.z;
+    });
+    var cx = sx / W, cy = sy / W, cz = sz / W, d2 = 0;
+    mem.forEach(function (n, i) {
+      d2 += ws[i] * ((n.x - cx) * (n.x - cx) + (n.y - cy) * (n.y - cy) + (n.z - cz) * (n.z - cz));
+    });
+    g.tc = { x: cx, y: cy, z: cz };
+    g.tR = Math.max(28, GL.reach * Math.sqrt(d2 / W) + 8);
+    return true;
+  }
+  /* what a globe holds, up to the timeline cursor: ideas, ideas shared with another thread, and how often it was returned to */
+  function threadStats(g) {
+    var conv = {}, ideas = 0, shared = 0, first = null, ment = 0;
+    nodes.forEach(function (n) {
+      if (n.type === 'theme' || !visN.get(n.id)) return;
+      if (n._ti !== g.ti) { if (n.threads.indexOf(g.id) >= 0) shared++; return; }
+      ideas++;
+      Object.keys(n.byConv || {}).forEach(function (k) {
+        var i = CONV_IDX[k];
+        if (i == null || i > S.upto || !(n.byConv[k] > 0)) return;
+        conv[i] = true;
+        ment += n.byConv[k];
+        if (first == null || i < first) first = i;
+      });
+    });
+    var c = Object.keys(conv).length;
+    /* recurrence: of the conversations after the thread first appeared, the share that came back to it */
+    var later = first == null ? 0 : Math.max(0, S.upto - first);
+    var rec = c > 1 ? Math.min(1, (c - 1) / Math.max(1, later)) : 0;
+    return { ideas: ideas, shared: shared, convs: c, rec: rec, cur: !!conv[S.upto], back: Math.max(0, c - 1), later: later, ment: ment };
+  }
+  function styleGlobe(g) {
+    var st = g.stats || { rec: 0 }, u = g.mesh.material.uniforms, w = Math.max(1, Math.min(3, GL.weight)) - 1;
+    /* threads returned to more often print deeper; with hues the range is narrower so a pale thread keeps its colour */
+    var hue = globeHue(g), inked = S.globeColor === 'ink';
+    var depth = inked ? 0.5 + 0.5 * st.rec : 0.72 + 0.28 * st.rec;
+    u.uColor.value.set(hue);
+    u.uFill.value = Math.max(0, Math.min(0.3, GL.fill));
+    u.uRim.value = [0.42, 0.55, 0.7][w];
+    u.uPower.value = [4.2, 2.6, 1.7][w];
+    u.uOpacity.value = g.op * depth;
+    g.mesh.material.depthTest = !!GL.veil;
+    g.mesh.renderOrder = GL.veil ? 1 : -4;
+    var picked = pickedGlobe() === g.ti || (S.focus && S.focus.by === 'thread' && S.focus.key === g.id);
+    var text = '§ ' + g.id + (phoneMQ.matches && FAR && !picked ? '' : '  ' + g.title);
+    if (picked && g.stats) {
+      text += '\n' + g.stats.ideas + ' ideas' + (g.stats.shared ? ' · +' + g.stats.shared + ' shared' : '') +
+        ' · ' + g.stats.convs + ' conversation' + (g.stats.convs === 1 ? '' : 's');
+      var tf = THREAD_FIELD[g.ti];
+      if (S.globeColor === 'fields' && tf) text += '\nmostly ' + tf.field + ' (' + Math.round(tf.share * 100) + '%)';
+      if (orbitOn() && g.stats.later > 0) text += '\nreturned to in ' + g.stats.back + ' of ' + g.stats.later + ' later conversation' + (g.stats.later === 1 ? '' : 's');
+    }
+    var col = inked ? INK : mixHex(hue, INK, 0.35);
+    if (text !== g.text || col !== g.color) {
+      g.text = text; g.color = col;
+      g.label.color = col;
+      g.label.text = text;
+      g.bx = g.label.scale.x; g.by = g.label.scale.y;
+      g.k = 0;
+    }
+    g.label.material.opacity = Math.min(1, g.op * 1.4);
+    var only = onlyOn();
+    g.core.visible = only;
+    if (only) {
+      var cr = 2.5 + 1.3 * Math.cbrt(st.ideas || 1);
+      g.core.scale.set(cr, cr, cr);
+      g.core.material.color.set(hue);
+      g.core.material.opacity = 0.85 * g.op;
+    }
+  }
+  function placeGlobe(g) {
+    g.grp.position.set(g.c.x, g.c.y, g.c.z);
+    g.mesh.scale.set(g.R, g.R, g.R);
+    g.k = 0;
+  }
+  /* snap: jump to the measured sphere (filters, timeline, engine stop); otherwise ease toward it while the layout settles */
+  var lastOnly = false;
+  function updateGlobes(snap) {
+    if (!globes.length) return;
+    var on = globesShown(), only = onlyOn(), pick = pickedGlobe();
+    if (only !== lastOnly) {
+      lastOnly = only;
+      var gg = graphGroup();
+      if (gg) gg.visible = !only;
+      G.enablePointerInteraction(!only);   /* with the nodes hidden, every tap reaches the background handler, which picks globes */
+    }
+    if (snap) pairWeights();
+    var orb = orbitOn(), gliding = Date.now() < glideUntil && !reduce;
+    if (orb && (snap || !OB.rings.length)) orbitLayout();
+    sunGrp.visible = orb;
+    orbitLines.forEach(function (l, k) { l.visible = orb && !!OB.rings[k]; });
+    globes.forEach(function (g) {
+      var ok;
+      if (orb) {
+        ok = on && S.threads.has(g.id) && !!g.o;
+        if (ok && !g.c) {   /* a globe not shown before starts from its place on the map, or from the centre */
+          if (measureGlobe(g)) { g.c = { x: g.tc.x, y: g.tc.y, z: g.tc.z }; g.R = g.tR; }
+          else { g.c = { x: 0, y: 0, z: 0 }; g.R = 1; }
+        }
+        if (ok) orbitTarget(g);
+      } else ok = on && S.threads.has(g.id) && measureGlobe(g);
+      g.shown = !!ok;
+      g.grp.visible = g.shown;
+      if (!ok) return;
+      if ((orb || gliding) && g.c && !reduce) { /* the animation loop glides it to its target */ }
+      else if (snap || !g.c || orb) { g.c = { x: g.tc.x, y: g.tc.y, z: g.tc.z }; g.R = g.tR; }
+      else {
+        g.c.x += (g.tc.x - g.c.x) * 0.35; g.c.y += (g.tc.y - g.c.y) * 0.35; g.c.z += (g.tc.z - g.c.z) * 0.35;
+        g.R += (g.tR - g.R) * 0.35;
+      }
+      placeGlobe(g);
+      if (snap || !g.stats) {
+        if (!orb || !g.stats) g.stats = threadStats(g);   /* in orbits the layout has just counted them */
+        var f = S.focus, selN0 = S.sel ? byId.get(S.sel) : null;
+        g.op = 1;
+        if (f && f.by === 'thread') g.op = f.key === g.id ? 1 : 0.3;
+        else if (f) g.op = 0.45;
+        else if (only && pick >= 0) g.op = pick === g.ti ? 1 : (PAIRS[pairKey(pick, g.ti)] ? 0.8 : 0.28);
+        else if (selN0) g.op = selN0.threads.indexOf(g.id) >= 0 ? 1 : 0.4;
+        else if (S.spot) g.op = g.stats.cur ? 1 : 0.3;
+        styleGlobe(g);
+      }
+    });
+    if (snap) updateConnectors();
+    scaleGlobeLabels();
+    if (orb || gliding) kick();
+  }
+
+  /* Orbits: the globes circle the root. A thread returned to more often rides a closer ring, and closer rings turn faster.
+     Rings are bands: threads are ranked by recurrence and dealt onto rings of 2, 3, 3, 4 (then 4, 5, 5 ...), so twelve globes
+     stay large enough to read. Ring radii are built from the globe sizes, so rings cannot touch. A slight tilt per ring keeps
+     the system from flattening edge-on; the tilt means nothing. */
+  var OB = { rings: [], ang: [], speed: 1, paused: false, last: 0, sys: 0 };
+  var glideUntil = 0, sunGrp = null, sunLabel = null, orbitLines = [];
+  var ORBIT_CAPS = [2, 3, 3, 4], ORBIT_TILT = [0, 7, -10, 13], SUN_R = 15, ORBIT_GAP = 26, GOLDEN = Math.PI * (3 - Math.sqrt(5));
+  function orbitCap(k) { return k < ORBIT_CAPS.length ? ORBIT_CAPS[k] : 4 + Math.floor((k - ORBIT_CAPS.length + 1) / 2); }
+  function orbitPoint(ring, a, out) {
+    var x0 = ring.r * Math.cos(a), z0 = ring.r * Math.sin(a), z1 = z0 * Math.cos(ring.tilt);
+    out.x = x0 * Math.cos(ring.node) + z1 * Math.sin(ring.node);
+    out.y = z0 * Math.sin(ring.tilt);
+    out.z = -x0 * Math.sin(ring.node) + z1 * Math.cos(ring.node);
+    return out;
+  }
+  function orbitLayout() {
+    var list = [];
+    globes.forEach(function (g) {
+      g.o = null;
+      if (!S.threads.has(g.id)) return;
+      g.stats = threadStats(g);
+      if (g.stats.ideas < 1) return;   /* a thread not yet begun at the timeline cursor has no globe */
+      list.push(g);
+    });
+    list.sort(function (a, b) {
+      return b.stats.rec - a.stats.rec || b.stats.convs - a.stats.convs || b.stats.ment - a.stats.ment || a.ti - b.ti;
+    });
+    var rings = [], i = 0, k = 0;
+    while (i < list.length) {
+      var mem = list.slice(i, i + orbitCap(k));
+      rings.push({ mem: mem });
+      i += mem.length; k++;
+    }
+    var prevR = 0, prevMax = SUN_R, lead = 0;
+    rings.forEach(function (ring, ri) {
+      var max = 0, rec = 0;
+      ring.mem.forEach(function (g, slot) {
+        var R = 11 * Math.cbrt(Math.max(1, g.stats.ideas)) + 6;   /* volume follows the ideas held */
+        g.o = { ring: ri, slot: slot, n: ring.mem.length, R: R };
+        if (R > max) max = R;
+        rec += g.stats.rec;
+      });
+      ring.r = prevR + prevMax + ORBIT_GAP + max;
+      ring.max = max;
+      ring.tilt = (ORBIT_TILT[ri % ORBIT_TILT.length] || 0) * Math.PI / 180;
+      ring.node = ri * GOLDEN;
+      ring.phase = ri * 1.3;
+      ring.rec = rec / ring.mem.length;
+      if (ri === 0) lead = Math.max(0.08, ring.rec);
+      /* the closest ring laps in about a minute; a ring returned to half as often takes twice as long, up to five minutes */
+      ring.period = Math.min(300, 60 * lead / Math.max(0.08, ring.rec));
+      if (OB.ang[ri] == null) OB.ang[ri] = 0;
+      prevR = ring.r; prevMax = max;
+    });
+    OB.rings = rings;
+    OB.sys = prevR + prevMax;
+    var pt = { x: 0, y: 0, z: 0 };
+    orbitLines.forEach(function (l, li) {
+      var ring = rings[li];
+      if (!ring) return;
+      var pos = l.geometry.attributes.position;
+      for (var j = 0; j < pos.count; j++) {
+        orbitPoint(ring, j / pos.count * Math.PI * 2, pt);
+        pos.setXYZ(j, pt.x, pt.y, pt.z);
+      }
+      pos.needsUpdate = true;
+    });
+  }
+  function orbitTarget(g) {
+    var ring = OB.rings[g.o.ring];
+    if (!g.tc) g.tc = { x: 0, y: 0, z: 0 };
+    orbitPoint(ring, ring.phase + OB.ang[g.o.ring] + g.o.slot / g.o.n * Math.PI * 2, g.tc);
+    g.tR = g.o.R;
+  }
+  function buildOrbits() {
+    sunGrp = new THREE.Group();
+    var root = byId.get(ROOT);
+    var core = new THREE.Mesh(GLOBE_GEO, new THREE.MeshBasicMaterial({ color: root ? ((TYPE_BY_ID[root.type] || {}).color || INK) : INK, depthWrite: false, depthTest: false, transparent: true }));
+    core.scale.set(SUN_R * 0.62, SUN_R * 0.62, SUN_R * 0.62);
+    core.renderOrder = 2;
+    sunGrp.add(core);
+    TEX_ROOT = TEX_ROOT || ringTexture(INK, false, true);
+    var ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX_ROOT, transparent: true, depthWrite: false, depthTest: false }));
+    ring.scale.set(SUN_R * 2.3, SUN_R * 2.3, 1);
+    ring.renderOrder = 2;
+    sunGrp.add(ring);
+    sunLabel = globeLabel();
+    sunLabel.textHeight = 8;
+    sunLabel.text = root ? displayLabel(root) : '';
+    sunLabel.userData.bx = sunLabel.scale.x; sunLabel.userData.by = sunLabel.scale.y;
+    sunGrp.add(sunLabel);
+    sunGrp.visible = false;
+    G.scene().add(sunGrp);
+    for (var k = 0; k < 8; k++) {
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(160 * 3), 3));
+      var line = new THREE.LineLoop(geo, new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.24, depthWrite: false, depthTest: false }));
+      line.renderOrder = -6;
+      line.frustumCulled = false;
+      line.visible = false;
+      G.scene().add(line);
+      orbitLines.push(line);
+    }
+  }
+  /* one step of the orbit clock and of the glide that carries each globe toward where it belongs; returns whether to keep going */
+  function orbitTick(now) {
+    var orb = orbitOn(), gliding = now < glideUntil;
+    if ((!orb && !gliding) || !globes.length) { OB.last = 0; return false; }
+    var dt = OB.last ? Math.min(0.1, (now - OB.last) / 1000) : 0.016;   /* a stalled tab resumes where it was, it does not leap */
+    OB.last = now;
+    var want = 0, pick = pickedGlobe();
+    if (orb) {
+      want = OB.paused || pick >= 0 || reduce ? 0 : 1;   /* picking a globe eases the system to rest so it can be read */
+      OB.speed += (want - OB.speed) * Math.min(1, dt / 0.3);
+      if (reduce || Math.abs(want - OB.speed) < 0.004) OB.speed = want;   /* with reduced motion it never turns at all */
+      OB.rings.forEach(function (ring, ri) { OB.ang[ri] += Math.PI * 2 / ring.period * dt * OB.speed; });
+      globes.forEach(function (g) { if (g.shown && g.o) orbitTarget(g); });
+    }
+    var k = reduce ? 1 : 1 - Math.exp(-dt / 0.3), moving = false;
+    globes.forEach(function (g) {
+      if (!g.shown || !g.c || !g.tc) return;
+      var dx = g.tc.x - g.c.x, dy = g.tc.y - g.c.y, dz = g.tc.z - g.c.z, dR = g.tR - g.R;
+      if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) + Math.abs(dR) > 0.4) moving = true;
+      else if (!orb) return;
+      g.c.x += dx * k; g.c.y += dy * k; g.c.z += dz * k; g.R += dR * k;
+      placeGlobe(g);
+    });
+    if (pick >= 0 && (moving || OB.speed > 0)) updateConnectors();
+    scaleGlobeLabels();
+    return gliding || moving || (orb && (OB.speed > 0 || want > 0));
+  }
+  /* frame the whole system once, from a little above; it is not refitted while it turns */
+  function frameOrbits(ms) {
+    var cam = G.camera(), half = cam.fov * Math.PI / 360;
+    var h = Math.atan(Math.tan(half) * Math.min(1, cam.aspect || 1));
+    var D = (OB.sys || 500) * 1.15 / Math.tan(h), el = 32 * Math.PI / 180;
+    fitOnStop = false;
+    G.cameraPosition({ x: 0, y: D * Math.sin(el), z: D * Math.cos(el) }, { x: 0, y: 0, z: 0 }, reduce ? 0 : ms);
+  }
+  function setOrbitPaused(v) {
+    OB.paused = !!v;
+    syncGlobeBtns();
+    if (!OB.paused) kick();
+  }
+  /* for screenshots and tests: __mm.orbits({ paused, time }) freezes the system at a known moment (seconds of turning) */
+  function orbitsOpts(o) {
+    o = o || {};
+    if (o.paused != null) OB.paused = !!o.paused;
+    if (o.time != null) {
+      if (!OB.rings.length) orbitLayout();
+      OB.rings.forEach(function (ring, ri) { OB.ang[ri] = Math.PI * 2 / ring.period * o.time; });
+      glideUntil = 0;
+      globes.forEach(function (g) { if (g.shown && g.o) { orbitTarget(g); g.c = { x: g.tc.x, y: g.tc.y, z: g.tc.z }; g.R = g.tR; placeGlobe(g); } });
+      updateConnectors();
+      scaleGlobeLabels();
+    }
+    syncGlobeBtns();
+    if (!OB.paused) kick();
+    return orbitStats();
+  }
+  function orbitStats() {
+    return {
+      paused: OB.paused, speed: +OB.speed.toFixed(3), sys: Math.round(OB.sys),
+      rings: OB.rings.map(function (ring, ri) {
+        return { r: Math.round(ring.r), period: Math.round(ring.period), angle: +OB.ang[ri].toFixed(4), rec: +ring.rec.toFixed(2),
+          threads: ring.mem.map(function (g) { return g.id; }) };
+      }),
+      globes: globes.filter(function (g) { return g.shown && g.o; }).map(function (g) {
+        return { id: g.id, ring: g.o.ring + 1, x: Math.round(g.c.x), y: Math.round(g.c.y), z: Math.round(g.c.z), R: Math.round(g.R), rec: +g.stats.rec.toFixed(2) };
+      })
+    };
+  }
+  /* Globes only: one connector per pair of threads, as wide as the links that cross between them */
+  var PAIRS = {}, conns = {}, CONN_GEO = null, connGrp = null;
+  function pairKey(a, b) { return a < b ? a + '-' + b : b + '-' + a; }
+  function pairWeights() {
+    PAIRS = {};
+    if (!onlyOn()) return;
+    function at(a, b) { var k = pairKey(a, b); return PAIRS[k] || (PAIRS[k] = { a: Math.min(a, b), b: Math.max(a, b), links: 0, shared: 0 }); }
+    links.forEach(function (l) {
+      if (l.type === 'belongs-to' || !visL.get(l.id)) return;
+      var a = byId.get(l.sid)._ti, b = byId.get(l.tid)._ti;
+      if (a !== b) at(a, b).links++;
+    });
+    nodes.forEach(function (n) {
+      if (n.type === 'theme' || n.threads.length < 2 || !visN.get(n.id)) return;
+      var b = threadIndex[n.threads[1]];
+      if (b != null && b !== n._ti) at(n._ti, b).shared++;
+    });
+  }
+  function updateConnectors() {
+    if (!connGrp) return;
+    var only = onlyOn(), pick = pickedGlobe();
+    connGrp.visible = only;
+    if (!only) return;
+    Object.keys(conns).forEach(function (k) { conns[k].mesh.visible = false; conns[k].label.visible = false; });
+    var up = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3();
+    Object.keys(PAIRS).forEach(function (k) {
+      var p = PAIRS[k], ga = globes[p.a], gb = globes[p.b];
+      if (!ga.shown || !gb.shown) return;
+      var w = p.links + p.shared, touches = pick === p.a || pick === p.b;
+      if (!touches && (w < 2 || orbitOn())) return;   /* single links stay out of the way until one of their globes is picked; in orbits, all of them do */
+      var c = conns[k];
+      if (!c) {
+        c = conns[k] = { mesh: new THREE.Mesh(CONN_GEO, new THREE.MeshBasicMaterial({ color: INK, transparent: true, depthWrite: false, depthTest: false })), label: globeLabel(), text: null, bx: 0, by: 0 };
+        c.mesh.renderOrder = -2;
+        c.label.textHeight = 6.5;
+        connGrp.add(c.mesh);
+        connGrp.add(c.label);
+      }
+      dir.set(gb.c.x - ga.c.x, gb.c.y - ga.c.y, gb.c.z - ga.c.z);
+      var len = dir.length() || 1, r = 0.5 + 0.9 * Math.sqrt(w);
+      c.mesh.position.set((ga.c.x + gb.c.x) / 2, (ga.c.y + gb.c.y) / 2, (ga.c.z + gb.c.z) / 2);
+      c.mesh.quaternion.setFromUnitVectors(up, dir.divideScalar(len));
+      c.mesh.scale.set(r, len, r);
+      c.mesh.material.opacity = touches ? 0.7 : (pick >= 0 ? 0.08 : 0.3);
+      c.mesh.visible = true;
+      if (touches) {
+        var text = (p.links ? p.links + (p.links === 1 ? ' link' : ' links') : '') + (p.links && p.shared ? ' \u00b7 ' : '') + (p.shared ? p.shared + ' shared' : '');
+        if (text !== c.text) { c.text = text; c.label.text = text; c.bx = c.label.scale.x; c.by = c.label.scale.y; }
+        /* the count sits a third of the way out from the picked globe, clear of the crowd at the middle */
+        var from = pick === p.a ? ga : gb, to = pick === p.a ? gb : ga;
+        c.label.position.set(from.c.x + (to.c.x - from.c.x) * 0.62, from.c.y + (to.c.y - from.c.y) * 0.62, from.c.z + (to.c.z - from.c.z) * 0.62);
+        c.label.visible = true;
+        c.k = 0;
+      }
+    });
+  }
+  /* a tap in the globes-only view: first tap picks the globe, a second tap on it goes inside */
+  function globeClick(ev) {
+    if (!onlyOn() || !ev || ev.clientX == null) return false;
+    var r = G.renderer().domElement.getBoundingClientRect();
+    var rc = new THREE.Raycaster();
+    rc.setFromCamera(new THREE.Vector2((ev.clientX - r.left) / r.width * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1), G.camera());
+    var best = null, bd = Infinity, sph = new THREE.Sphere(), hit = new THREE.Vector3();
+    globes.forEach(function (g) {
+      if (!g.shown) return;
+      sph.center.set(g.c.x, g.c.y, g.c.z);
+      sph.radius = g.R;
+      if (rc.ray.intersectSphere(sph, hit)) { var d = hit.distanceTo(rc.ray.origin); if (d < bd) { bd = d; best = g; } }
+    });
+    if (!best || !themeOf[best.ti]) return false;
+    fitOnStop = false;
+    if (pickedGlobe() === best.ti) { enterGlobe(best); return true; }
+    S.path = null; S.pathFrom = null; S.pathMiss = null;
+    S.sel = themeOf[best.ti].id;
+    bump();
+    renderDetail();
+    setPanel('detail', true);
+    return true;
+  }
+  function enterGlobe(g) {
+    setGlobes('on', true);
+    G.zoomToFit(reduce ? 0 : 800, 60, function (n) { return n._ti === g.ti; });
+  }
+  function leaveOnly() {
+    if (S.globes !== 'only' && S.globes !== 'orbits') return;
+    if (S.globes === 'orbits') glideUntil = Date.now() + 1500;   /* the globes glide back to their places on the map */
+    S.globes = 'on';
+    syncGlobeBtns();
+  }
+  function syncGlobeBtns() {
+    ['off', 'on', 'only', 'orbits'].forEach(function (m) { var b = $('btn-globes-' + m); if (b) b.setAttribute('aria-pressed', String(S.globes === m)); });
+    var ow = $('orbit-wrap'), pb = $('btn-orbit-pause');
+    if (ow) ow.hidden = S.globes !== 'orbits';
+    if (pb) { pb.textContent = OB.paused ? 'Play' : 'Pause'; pb.setAttribute('aria-pressed', String(OB.paused)); pb.hidden = reduce; }
+    ['ink', 'threads', 'fields'].forEach(function (m) { var b = $('btn-gcol-' + m); if (b) b.setAttribute('aria-pressed', String(S.globeColor === m)); });
+    var w = $('gcol-wrap'), lg = $('gcol-legend');
+    if (w) w.hidden = S.globes === 'off';
+    if (!lg) return;
+    /* which hue means what: by field, the fields in use with their threads; by thread, the label on each globe says it */
+    var html = '';
+    if (S.globeColor === 'fields') {
+      var seen = {}, order = [];
+      THREADS.forEach(function (t, ti) {
+        var tf = THREAD_FIELD[ti];
+        if (!tf) return;
+        if (!seen[tf.field]) { seen[tf.field] = []; order.push(tf.field); }
+        seen[tf.field].push(t.id);
+      });
+      html = order.map(function (f) {
+        return '<li><span class="sh-dot" style="background:' + (FIELD_HUES[f] || '#6F6F6F') + '"></span><span>' + esc(f) + ' <span class="mono gcol-th">' + esc(seen[f].join(' ')) + '</span></span></li>';
+      }).join('');
+    }
+    lg.innerHTML = html;
+    lg.hidden = !html;
+  }
+  function setGlobeColor(mode, persist) {
+    S.globeColor = mode === 'threads' || mode === 'fields' ? mode : 'ink';
+    syncGlobeBtns();
+    if (persist) saveGlobeColor(S.globeColor);
+    if (G) bump();
+  }
+  /* the label rides the top of the globe's outline whatever the camera angle, and holds its size when zoomed out */
+  function scaleGlobeLabels() {
+    if (!globes.length || !G) return;
+    var cam = G.camera().position;
+    /* orbit globes are smaller than the clusters they stand for, so their labels grow less with distance */
+    var k = camDist ? Math.max(1, Math.min(orbitOn() ? 2.3 : 3.4, camDist / 420)) : 1;
+    globes.forEach(function (g) {
+      if (!g.shown || !g.by) return;
+      if (Math.abs(k - g.k) > 0.04) {
+        g.k = k;
+        g.label.scale.set(g.bx * k, g.by * k, 1);
+        g.label.center.set(0.5, -(g.R + 3 * k) / (g.by * k));
+      }
+      /* inside or nearly inside a globe its shell is gone (the shader fades it); the label follows */
+      var dx = cam.x - g.c.x, dy = cam.y - g.c.y, dz = cam.z - g.c.z;
+      var q = Math.sqrt(dx * dx + dy * dy + dz * dz) / g.R;
+      var near = Math.max(0, Math.min(1, (q - 1.1) / 0.8));
+      g.label.visible = near > 0.02;
+    });
+    if (sunLabel && sunGrp.visible && sunLabel.userData.by) {
+      sunLabel.scale.set(sunLabel.userData.bx * k, sunLabel.userData.by * k, 1);
+      sunLabel.center.set(0.5, 1 + (SUN_R * 1.3) / (sunLabel.userData.by * k));   /* the name hangs just under the sun */
+    }
+    var kc = camDist ? Math.max(1, Math.min(3, camDist / 460)) : 1;
+    Object.keys(conns).forEach(function (key) {
+      var c = conns[key];
+      if (!c.label.visible || !c.by || Math.abs(kc - (c.k || 0)) < 0.04) return;
+      c.k = kc;
+      c.label.scale.set(c.bx * kc, c.by * kc, 1);
+    });
+  }
+  function setGlobes(mode, persist) {
+    var was = S.globes;
+    S.globes = mode === 'on' || mode === 'only' || mode === 'orbits' ? mode : 'off';
+    if (S.globes === 'only' || S.globes === 'orbits') {
+      /* the views without the ideas belong to the clustered layout, with no path and no single idea selected */
+      if (S.mode !== 'cluster' && G) setMode('cluster');
+      S.path = null; S.pathFrom = null; S.pathMiss = null;
+      if (pickedGlobe() < 0) S.sel = null;
+    }
+    var turned = (was === 'orbits') !== (S.globes === 'orbits');
+    if (turned) glideUntil = Date.now() + 1500;   /* globes glide between the map and their rings */
+    syncGlobeBtns();
+    if (persist) saveGlobes(S.globes === 'off' ? 'off' : 'on');   /* Only and Orbits are visits, not settings */
+    if (G) {
+      bump(); renderDetail();
+      if (turned && S.globes === 'orbits') frameOrbits(900);
+      else if (turned && S.globes !== 'off') G.zoomToFit(reduce ? 0 : 900, 50);
+    }
+  }
+  /* for tuning and tests: __mm.globes({ mode, weight, fill, veil, reach }) */
+  function globesOpts(o) {
+    o = o || {};
+    ['weight', 'fill', 'veil', 'reach'].forEach(function (k) { if (o[k] != null) GL[k] = o[k]; });
+    globes.forEach(function (g) { g.text = null; });
+    if (o.mode) setGlobes(o.mode, false); else if (G) bump();
+    return GL;
+  }
+  function globeStats() {
+    return globes.filter(function (g) { return g.shown; }).map(function (g) {
+      var inside = 0, total = 0;
+      nodes.forEach(function (n) {
+        if (n._ti !== g.ti || n.x == null || !visN.get(n.id)) return;
+        total++;
+        if (Math.sqrt((n.x - g.c.x) * (n.x - g.c.x) + (n.y - g.c.y) * (n.y - g.c.y) + (n.z - g.c.z) * (n.z - g.c.z)) <= g.R) inside++;
+      });
+      return { id: g.id, x: Math.round(g.c.x), y: Math.round(g.c.y), z: Math.round(g.c.z), R: Math.round(g.R), inside: inside, total: total,
+        rec: +g.stats.rec.toFixed(2), convs: g.stats.convs, ideas: g.stats.ideas, shared: g.stats.shared };
     });
   }
   /* newly revealed nodes swell into place; glows breathe */
@@ -601,6 +1248,7 @@
       glows.forEach(function (o) { if (o.glow) o.glow.scale.set(o.r * 5.2 * b, o.r * 5.2 * b, 1); });
       live = true;
     }
+    if (orbitTick(now)) live = true;
     if (live) requestAnimationFrame(frame); else animOn = false;
   }
 
@@ -671,6 +1319,7 @@
   }
 
   function setMode(mode) {
+    if (mode === 'radial') leaveOnly();
     S.mode = mode;
     $('btn-mode-cluster').setAttribute('aria-pressed', String(mode === 'cluster'));
     $('btn-mode-radial').setAttribute('aria-pressed', String(mode === 'radial'));
@@ -686,7 +1335,7 @@
     }
     fitOnStop = true;
     G.d3ReheatSimulation();
-    updateWashes();
+    updateSprites();
   }
 
   /* ------------------------------------------------------------------ *
@@ -997,6 +1646,7 @@
   function selectNode(id, fly) {
     var n = byId.get(id);
     if (!n) return;
+    if (n.type !== 'theme' || S.pathFrom) leaveOnly();   /* an idea or a path needs the nodes back */
     if (!nodeVisible(n)) revealNode(n);
     if (S.pathFrom && S.pathFrom !== id && byId.has(S.pathFrom)) { tracePath(S.pathFrom, id); return; }
     S.path = null; S.pathMiss = null;
@@ -1538,6 +2188,7 @@
       ' · ' + THREADS.length + ' threads' + (META.version ? ' · v' + META.version : '');
     var rn = byId.get(ROOT);
     $('root-name').textContent = rn ? rn.label : 'the root';
+    if ($('orbit-root')) $('orbit-root').textContent = rn ? rn.label : 'the root';
     if ($('legend-owner')) $('legend-owner').textContent = OWNER_NAME;
     $('threadnav').innerHTML = THREADS.map(function (t) {
       return '<button type="button" data-th="' + esc(t.id) + '" title="' + esc(t.summary || t.title) + '"><b>§ ' + esc(t.id) + '</b>' + esc(t.title) + '</button>';
@@ -1591,7 +2242,7 @@
       .cooldownTime(12000)
       .onNodeClick(function (n) { selectNode(n.id, true); })
       .onNodeHover(function (n) { hoverNode = n || null; if (desk) syncCursor(); })
-      .onBackgroundClick(function () { clearSelection(); });
+      .onBackgroundClick(function (ev) { if (!globeClick(ev)) clearSelection(); });
 
     G.d3Force('charge').strength(-70);
     G.d3Force('link').distance(function (l) { return l.type === 'belongs-to' ? 36 : 56; });
@@ -1600,6 +2251,8 @@
 
     G.scene().fog = new THREE.Fog(BONE, 1, 6000);
     buildWashes();
+    buildGlobes();
+    buildOrbits();
     var ctl = G.controls();
     if (ctl && ctl.addEventListener) ctl.addEventListener('change', function () { onCamera(false); });
 
@@ -1612,11 +2265,13 @@
     var spritesReady = false, ticks = 0;
     G.onEngineTick(function () {
       if (!spritesReady && objs.size >= nodes.length) { spritesReady = true; updateSprites(); }
-      if (++ticks % 12 === 0) { updateWashes(); onCamera(true); }
+      if (++ticks % 6 === 0) updateGlobes(false);
+      if (ticks % 12 === 0) { updateWashes(); onCamera(true); }
     });
     G.onEngineStop(function () {
       if (fitOnStop) { fitOnStop = false; G.zoomToFit(reduce ? 0 : 700, 50); }
       updateWashes();
+      updateGlobes(true);
       setTimeout(function () { onCamera(true); }, reduce ? 50 : 800);
     });
     setTimeout(function () { if (fitOnStop) G.zoomToFit(0, 50); onCamera(true); }, 1400);
@@ -1751,6 +2406,7 @@
     S.convOnly = false; S.verifyOnly = false; S.sel = null; S.since = ''; S.focus = null;
     stopPlay();
     S.upto = LASTC; S.spot = false; S.path = null; S.pathFrom = null; S.pathMiss = null;
+    leaveOnly();
     syncTimeline();
     TYPES.forEach(function (t) { $('f-type-' + t.id).checked = true; });
     THREADS.forEach(function (t) { $('f-thread-' + t.id).checked = true; });
@@ -1773,6 +2429,9 @@
     $('btn-size-strength').addEventListener('click', function () { setSize('strength', true); });
     $('btn-ink-even').addEventListener('click', function () { setInk('even', true); });
     $('btn-ink-recency').addEventListener('click', function () { setInk('recency', true); });
+    ['off', 'on', 'only', 'orbits'].forEach(function (m) { $('btn-globes-' + m).addEventListener('click', function () { setGlobes(m, true); }); });
+    $('btn-orbit-pause').addEventListener('click', function () { setOrbitPaused(!OB.paused); });
+    ['ink', 'threads', 'fields'].forEach(function (m) { $('btn-gcol-' + m).addEventListener('click', function () { setGlobeColor(m, true); }); });
     $('share-bar').addEventListener('click', function () { setPanel('share', !isOpen('share')); });
     $('btn-history').addEventListener('click', function () { setPanel('history', !isOpen('history')); });
     $('btn-history-close').addEventListener('click', function () { setPanel('history', false); });
@@ -1826,6 +2485,7 @@
   if (HAS_TIME) { $('inkby-wrap').hidden = false; $('lg-glow').hidden = false; }
   wire();
   setInk(S.ink, false);
+  syncGlobeBtns();
   renderDetail();
   if (phoneMQ.matches) { setPanel('filters', false); setPanel('detail', false); }
   setPanel('share', false); /* starts as its one-line teaser so the map gets the room; the bar under the map opens it */
@@ -1842,5 +2502,5 @@
   ]);
   fontsReady.then(init);
 
-  window.__mm = { S: S, select: selectNode, setSize: setSize, setUpto: setUpto, play: startPlay, stop: stopPlay, order: CONV_ORDER, get graph() { return G; } };
+  window.__mm = { S: S, select: selectNode, setSize: setSize, setUpto: setUpto, play: startPlay, stop: stopPlay, order: CONV_ORDER, globes: globesOpts, setGlobes: setGlobes, setGlobeColor: setGlobeColor, globeStats: globeStats, orbits: orbitsOpts, orbitStats: orbitStats, get graph() { return G; } };
 })();
