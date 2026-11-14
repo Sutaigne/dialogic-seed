@@ -4,7 +4,7 @@ Claude Code on the web runs each session in a cloud container set up by an *envi
 
 Ask Claude Code in a session on this repo to "set up a cloud environment for this repo" and it will propose these settings for your approval, or enter them yourself in the environment settings:
 
-- **Network:** limited, with package registries and MCP servers allowed (the Google Drive connector is an MCP server). No extra hosts: GitHub goes through the session's proxy and the fonts are inlined.
+- **Network:** limited, with package registries and MCP servers allowed (a storage connector such as Google Drive is an MCP server). No extra hosts: GitHub goes through the session's proxy and the fonts are inlined.
 - **Secrets:** none.
 - **Variables:** `CHROME=/usr/local/bin/chrome-nosandbox` (only for `tools/shot.mjs` layout screenshots).
 - **Setup script:**
@@ -21,4 +21,4 @@ fi
 node --version
 ```
 
-The Artifact tool and the Google Drive connector are account connections, not environment settings: turn on Google Drive in claude.ai if you use the Drive inbox.
+The Artifact tool and the storage connector are account connections, not environment settings: if you use an inbox, turn on that storage service (Google Drive, Dropbox, OneDrive, Box or similar) in claude.ai.
