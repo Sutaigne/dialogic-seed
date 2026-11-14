@@ -787,6 +787,10 @@ html, body {
 .an-engine:empty { display: none; }
 .an-link { min-height: 0; padding: 0 0 0 10px; font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
 .an-err { margin: 12px 0 0; padding: 8px 10px; border-left: 1.5px solid var(--oxblood); color: var(--oxblood); font-size: 14px; line-height: 1.4; background: rgba(122, 34, 48, 0.05); }
+.an-connect { margin: 12px 0 0; padding: 7px 10px; border-left: 1.5px solid var(--forest); background: rgba(44, 74, 56, 0.06); font-size: 13.5px; line-height: 1.5; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.an-connect-msg { flex: 1 1 100%; color: var(--ink-2); font-style: italic; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.an-connect a { font-family: var(--ff-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--forest); text-decoration: underline; text-underline-offset: 3px; }
+.an-connect .an-link { margin-left: auto; padding: 0 2px; font-size: 14px; text-decoration: none; }
 .an-keyform { margin: 8px 0 0; padding: 14px 0 4px; border-top: 0.5px solid var(--rule-med); }
 .an-keyform .note { margin: 8px 0 14px; }
 .an-input {
@@ -805,6 +809,7 @@ html, body {
 .an-out li::marker { color: var(--oxblood); }
 .an-out strong { font-weight: 500; color: var(--ink); }
 .an-out em { font-style: italic; }
+.an-out a { color: var(--oxblood); text-decoration: underline; text-decoration-thickness: 0.5px; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .an-out code { font-family: var(--ff-mono); font-size: 13px; }
 .an-out hr { border: 0; border-top: 0.5px solid var(--rule-med); margin: 18px 0; }
 .an-h {
@@ -814,6 +819,10 @@ html, body {
 }
 .an-out > .an-h:first-child { margin-top: 10px; border-top: 0; }
 .an-h4 { margin: 18px 0 6px; font-family: var(--ff-serif); font-style: italic; font-weight: 400; font-size: 18px; }
+.an-h4 .an-draft { display: inline-flex; align-items: center; vertical-align: middle; margin: 0 0 2px 12px; min-height: 28px; padding: 5px 9px; font-family: var(--ff-mono); font-style: normal; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--oxblood); border-color: var(--oxblood); }
+.an-h4 .an-draft:hover { background: var(--oxblood); color: var(--bone); }
+.an-h4 .an-draft.is-done { background: var(--forest); border-color: var(--forest); color: var(--bone); }
+.an-h4 .an-draft:disabled { cursor: progress; opacity: 0.7; animation: an-breathe 1.8s ease-in-out infinite; }
 .an-thinking { color: var(--ink-3); font-style: italic; animation: an-breathe 1.8s ease-in-out infinite; }
 @keyframes an-breathe { 50% { opacity: 0.45; } }
 .an-foot { margin-top: 18px; padding-top: 10px; border-top: 0.5px solid var(--rule-faint); }

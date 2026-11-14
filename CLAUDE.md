@@ -32,9 +32,10 @@ node data/test/run.mjs          # all pass on the frozen made-up fixture; real f
 node build.mjs                  # dist/dialogic-map.html (~2 MB+, fonts + graph bundle inlined)
 # 2. publish dist/dialogic-map.html with the Artifact tool:
 #    ordinary run: update the artifact whose URL is in SETTINGS.md (read it once in the session first if the tool asks;
-#    omit `capabilities` so the stored {sample: {}} carries forward).
+#    omit `capabilities` so the stored declaration carries forward).
 #    (first run): SETTINGS.md has no artifact URL yet. Publish a NEW artifact (title "Dialogic", icon "map",
-#    capabilities {sample: {}} so the Analyze sheet can run on the owner's Claude account),
+#    capabilities {sample: {}, mcp: {servers: [{server: "Hugging Face", tools: ["hub_repo_search"]}]}} so the Analyze
+#    sheet runs on the owner's Claude account and can search public projects if they have that connector),
 #    then write its URL into SETTINGS.md. This is the only time a new artifact is ever created.
 node scripts/export.mjs         # out/knowledge/dialogic-map.txt + out/reports/run-summary.md
 ```
@@ -44,7 +45,8 @@ Then commit and push (a PR if the owner works that way), and hand the owner **`o
 **(first run)** also tell the owner, plainly:
 1. their map's link (the new artifact URL);
 2. in the Project's knowledge: **delete `FIRST-CONVERSATION.md`**, upload `dialogic-map.txt`; keep `DELTA-FORMAT.md`;
-3. from now on: talk, say "update the map", then tell Claude Code "merge the inbox" (or paste), then replace `dialogic-map.txt`.
+3. from now on: talk, say "update the map", then tell Claude Code "merge the inbox" (or paste), then replace `dialogic-map.txt`;
+4. recommended, if not done yet: connect **Hugging Face** in claude.ai (https://claude.ai/customize/connectors, how-to https://support.claude.com/en/articles/11176164) so Analyze recommends real public projects from a live search. Without it the picks come from memory and Analyze shows the same note with these links.
 
 Update `OPEN-THREADS.md`: the `Live:` line (artifact URL and version number, v1 on the first run) and one line under `Banked`.
 
