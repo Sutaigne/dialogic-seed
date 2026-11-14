@@ -1,6 +1,6 @@
 # FIRST-CONVERSATION.md — how to run the first conversation
 
-For the chat side (Claude, in the owner's Dialogic Project). This file is in project knowledge only for the first conversation, while there is no `dialogic-map.txt`. If both files are present, the map exists and this file is stale: ignore it and remind the owner once to delete it.
+For the chat side (Claude, in the owner's Dialogic Project). This file is in project knowledge only for the first conversation, while `dialogic-map.txt` is missing or blank (no node lines). If the map is there and has nodes, this file is stale: ignore it and remind the owner once to remove it.
 
 The project instructions still apply: style, tracking, delta format, handoff. This file adds what is different the first time: the map is blank, the owner may not know what to bring, and the conversation has to leave behind enough to draw a first map.
 
@@ -65,8 +65,8 @@ When the owner says "update the map", or agrees to wrap:
    - notes are one line, 140 characters or fewer, with no ` | ` inside any field
    - origin `c` items carry a verifyNote
    - the `## touched` header is present (it stays empty the first time)
-2. Hand it off as the project instructions say (Drive inbox, or paste).
+2. Hand it off as the project instructions say (the storage inbox, or paste).
 3. Tell the owner the three steps that finish setup, briefly:
-   1. Open Claude Code on their copy of the repo and say "merge the first delta" (paste the block, or "merge the inbox" if it went to Drive).
-   2. Claude Code builds and publishes their map, gives them its link, and hands them `dialogic-map.txt`.
-   3. In this Project's knowledge: delete `FIRST-CONVERSATION.md` and upload `dialogic-map.txt`. From the next conversation on, every conversation grows the map.
+   1. Open Claude Code on their copy of the repo and say "merge the first delta" (paste the block, or "merge the inbox" if it was saved to their storage).
+   2. Claude Code builds and publishes their map and gives them its link.
+   3. In this Project's knowledge: remove `FIRST-CONVERSATION.md`, and bring in the new map. If they upload files by hand, that means uploading the `dialogic-map.txt` Claude Code hands them; if the Project takes its knowledge from GitHub, it means pressing Sync now once the merge is on the synced branch. From the next conversation on, every conversation grows the map.
