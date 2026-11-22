@@ -3,6 +3,7 @@
 //   CDP_URL=http://localhost:8742/dialogic-map.html node tools/shot.mjs <w> <h> <out.png> [js-to-eval-before-shot] [waitMs]
 //   e.g. CDP_URL=http://localhost:8742/dialogic-map.html node tools/shot.mjs 1280 900 out/shot.png
 // Env: CDP_URL (required, page to load); CHROME (optional, path to chrome.exe; default below).
+// The first-open walk-through is kept shut (#guide=off is added) unless CDP_URL carries a # of its own, e.g. #guide=tour to shoot it.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 const [w, h, out, js = '', wait = '3500'] = process.argv.slice(2);
@@ -20,7 +21,7 @@ ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) 
 const send = (method, params = {}) => new Promise(r => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
 await send('Runtime.enable'); await send('Page.enable'); await send('Network.enable');
 await send('Emulation.setDeviceMetricsOverride', { width: +w, height: +h, deviceScaleFactor: 1, mobile: +w < 700 });
-await send('Page.navigate', { url: process.env.CDP_URL });
+await send('Page.navigate', { url: process.env.CDP_URL + (process.env.CDP_URL.includes('#') ? '' : '#guide=off') });
 await sleep(+wait);
 if (js) { const r = await send('Runtime.evaluate', { expression: js, awaitPromise: true, returnByValue: true }); console.log('EVAL', JSON.stringify(r.result?.result?.value ?? r.result)); await sleep(1800); }
 const shot = await send('Page.captureScreenshot', { format: 'png' });

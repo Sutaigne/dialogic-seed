@@ -1744,11 +1744,22 @@
   /* ------------------------------------------------------------------ *
    * Timeline: step or replay the map conversation by conversation
    * ------------------------------------------------------------------ */
-  var playT = null;
+  var playT = null, tlOpen = false;
   function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+  /* The bar is closed until its button is pressed, and closed again on every load, so the map gets the room.
+     Hiding it changes nothing else: the cursor, Spotlight and a running Replay stay as they are, and the button says so. */
+  function setTimeline(open, focus) {
+    if (!HAS_TIME) return;
+    tlOpen = !!open;
+    $('timeline').hidden = !tlOpen;
+    $('btn-timeline').hidden = tlOpen;
+    $('btn-timeline').setAttribute('aria-expanded', String(tlOpen));
+    syncTimeline();
+    if (focus) { try { $(tlOpen ? 'tl-play' : 'btn-timeline').focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+  }
   function buildTimeline() {
     if (!HAS_TIME) return;
-    $('timeline').hidden = false;
+    $('btn-timeline').hidden = false;
     $('tl-ticks').innerHTML = CONV_ORDER.map(function (id, i) {
       var c = CONV_BY_ID[id];
       return '<button type="button" class="tl-tick" data-i="' + i + '" title="' + esc(c.date + ' · ' + c.title) + '" aria-label="' + esc('Conversation ' + (i + 1) + ' of ' + CONV_ORDER.length + ': ' + c.title) + '"><i></i></button>';
@@ -1762,6 +1773,8 @@
     $('tl-play').addEventListener('click', function () { if (playT) stopPlay(); else startPlay(); });
     $('tl-spot').addEventListener('click', function () { S.spot = !S.spot; bump(); syncTimeline(); });
     $('tl-now').addEventListener('click', function () { stopPlay(); setUpto(LASTC, true); });
+    $('btn-timeline').addEventListener('click', function () { setTimeline(true, true); });
+    $('tl-hide').addEventListener('click', function () { setTimeline(false, true); });
     syncTimeline();
   }
   function syncTimeline() {
@@ -1778,6 +1791,11 @@
     $('tl-play').setAttribute('aria-pressed', String(!!playT));
     $('tl-spot').setAttribute('aria-pressed', String(S.spot));
     $('tl-now').hidden = S.upto >= LASTC;
+    /* with the bar hidden, its button carries what the bar would have shown: where the cursor is, and Spotlight */
+    var away = S.upto < LASTC || !!playT;
+    $('btn-timeline').textContent = 'Timeline' + (away ? ' \u00b7 ' + (S.upto + 1) + ' / ' + CONV_ORDER.length : '') + (S.spot ? ' \u00b7 spotlight' : '');
+    $('btn-timeline').classList.toggle('is-lit', away || S.spot);
+    if (!tlOpen) return;
     var cur = $('tl-ticks').children[S.upto];
     if (cur && cur.scrollIntoView && $('tl-ticks').scrollWidth > $('tl-ticks').clientWidth) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
@@ -2502,5 +2520,5 @@
   ]);
   fontsReady.then(init);
 
-  window.__mm = { S: S, select: selectNode, setSize: setSize, setUpto: setUpto, play: startPlay, stop: stopPlay, order: CONV_ORDER, globes: globesOpts, setGlobes: setGlobes, setGlobeColor: setGlobeColor, globeStats: globeStats, orbits: orbitsOpts, orbitStats: orbitStats, get graph() { return G; } };
+  window.__mm = { S: S, select: selectNode, setSize: setSize, setUpto: setUpto, play: startPlay, stop: stopPlay, order: CONV_ORDER, globes: globesOpts, setGlobes: setGlobes, setGlobeColor: setGlobeColor, globeStats: globeStats, orbits: orbitsOpts, orbitStats: orbitStats, setTimeline: setTimeline, get timelineOpen() { return tlOpen; }, get graph() { return G; } };
 })();

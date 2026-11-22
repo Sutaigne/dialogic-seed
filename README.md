@@ -25,6 +25,8 @@ Both are choices on one control in the viewer (Filters, Layout, Globes). Also in
 - **Share:** what leads your conversations, by topic, type or field.
 - **Analyze:** a reading of your map that recommends public projects to look at, run on your own Claude account.
 
+The first time you open your map it walks you through all of this in about a minute. After that a **?** button on the map keeps a one-page guide.
+
 ## Get started (once, about half an hour)
 
 You need a claude.ai account with Projects and Claude Code, and a GitHub account. Google Drive is optional.
