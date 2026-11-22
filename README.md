@@ -53,6 +53,10 @@ Why two: when this was tried in November 2026, files a Project takes from GitHub
    - **Setup A:** make sure the merge is on the branch the Project syncs, normally your default branch (if Claude Code opened a pull request, merge it). Press **Sync now**, then remove `FIRST-CONVERSATION.md` from the Project.
    - **Setup B:** delete `FIRST-CONVERSATION.md` and upload the `dialogic-map.txt` Claude Code handed you.
 
+## Sharing a copy with someone
+
+Before you hand it over, you can fill the `intel:` block in `chat/FIRST-CONVERSATION.md` with a few lines about them (interests, what they might want a map for, how they like to talk). Their first conversation uses it to start in the right place without reciting it. Leave it as `(none)` to skip. The file sits in their Project's knowledge (uploaded or synced from GitHub), so assume they may read it.
+
 ## After that, every conversation
 
 - **Setup A:** talk → "update the map" → paste the block into Claude Code → once the merge is on the synced branch, **Sync now** in the Project.
