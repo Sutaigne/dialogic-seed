@@ -49,7 +49,7 @@ Then commit and push (a PR if the owner works that way), and get the map back to
 Also give **one paragraph** of what changed (counts added / modified / removed / reversed, the conversation's title, verify-flag totals, anything to review); `out/reports/run-summary.md` has the numbers.
 
 **(first run)** also tell the owner, plainly:
-1. their map's link (the new artifact URL);
+1. their map's link (the new artifact URL); it opens with a one-minute walk-through the first time, and a "?" button on the map keeps a one-page guide after that;
 2. in the Project's knowledge: **remove `FIRST-CONVERSATION.md`** and keep `DELTA-FORMAT.md`; then upload `dialogic-map.txt` (`upload`) or press Sync now once the merge is on the synced branch (`github-sync`);
 3. from now on: talk, say "update the map", then tell Claude Code "merge the inbox" (or paste), then replace `dialogic-map.txt` or press Sync now;
 4. recommended, if not done yet: connect **Hugging Face** in claude.ai (https://claude.ai/customize/connectors, how-to https://support.claude.com/en/articles/11176164) so Analyze recommends real public projects from a live search. Without it the picks come from memory and Analyze shows the same note with these links.
@@ -89,9 +89,9 @@ Any storage service works if its connector can do four things: create a plain te
 - Themes come from `threads.txt`; `belongs-to` edges are generated, never written.
 - Engagement counts live in `mentions.txt`; strength is `1 − e^(−score/2)` from `1 + ln(count)` per conversation with recency decay (details in `docs/DELTA-FORMAT.md`). Nothing sets it by hand.
 - `build.mjs` and `scripts/export.mjs` refuse a blank map: there is nothing to publish before the first merge.
-- The viewer (`src/viewer.*`, plus `src/analyze.js` for the Analyze sheet) is an ES5 IIFE; `build.mjs` inlines `vendor/graph-bundle.js` (prebuilt 3d-force-graph + three) and the fonts. Rebuilding the bundle needs `vendor/node_modules` (`npm ci` in `vendor/`, see `vendor/README.md`); the committed bundle is enough for normal runs.
+- The viewer (`src/viewer.*`, plus `src/analyze.js` for the Analyze sheet and `src/guide.*` for the first-open walk-through and the "?" reference card) is an ES5 IIFE; `build.mjs` inlines `vendor/graph-bundle.js` (prebuilt 3d-force-graph + three) and the fonts. Rebuilding the bundle needs `vendor/node_modules` (`npm ci` in `vendor/`, see `vendor/README.md`); the committed bundle is enough for normal runs.
 - Tests run on `data/test/fixture-src`, a made-up map (owner "Lantern") built from `data/test/fixture-deltas/` by `data/test/build-fixture.mjs`. Rebuild it only when the merge rules change.
-- Screenshots for checking layout: `tools/shot.mjs` (headless Chrome via CDP); see `docs/REPORTS.md`.
+- Screenshots for checking layout: `tools/shot.mjs` (headless Chrome via CDP); see `docs/REPORTS.md`. The walk-through opens by itself once per browser; `#guide=off` on the page address keeps it shut (`shot.mjs` adds it), and it stays shut when a script drives the browser.
 - Deltas are append-only history: `data/deltas/` keeps every merged block.
 
 ## Where things are

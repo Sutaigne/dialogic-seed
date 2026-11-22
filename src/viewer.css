@@ -710,6 +710,20 @@ html, body {
   border: 0.5px solid var(--rule);
   z-index: 4;
 }
+/* the timeline stays out of the way until its button is pressed; the button sits where the bar opens */
+.tl-open {
+  position: absolute;
+  left: max(10px, env(safe-area-inset-left, 0px));
+  bottom: 30px;
+  z-index: 4;
+  min-height: 28px;
+  padding: 6px 9px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  background: rgba(245, 239, 226, 0.9);
+}
+.tl-open.is-lit, .tl-open.is-lit:hover { background: var(--ink); color: var(--bone); border-color: var(--ink); }
+.tl-x { font-size: 19px; letter-spacing: 0; padding: 2px 6px; color: var(--ink); }
 .tl-row { display: flex; align-items: center; gap: 8px; }
 .tl-btn { flex: none; min-height: 28px; padding: 6px 9px; font-size: 9.5px; letter-spacing: 0.12em; }
 .tl-ticks { flex: 1; min-width: 0; display: flex; align-items: center; gap: 3px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
@@ -755,7 +769,10 @@ html, body {
 
 @media (max-width: 760px) {
   .timeline { bottom: 8px; width: calc(100% - 16px); padding: 6px 8px; }
+  .tl-open { bottom: 8px; left: max(8px, env(safe-area-inset-left, 0px)); min-height: 34px; padding: 6px 10px; }
   .tl-btn { min-height: 34px; padding: 6px 8px; }
+  .tl-row { gap: 6px; }
+  .tl-x { padding: 4px 8px; }
   .tl-tick { height: 34px; }
   .tl-cap { flex-direction: column; gap: 1px; }
   .tl-meta { text-align: left; flex: none; width: 100%; white-space: normal; line-height: 1.5; }
