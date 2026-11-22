@@ -2,7 +2,30 @@
 
 A living mind map, grown one conversation at a time. You talk with Claude in a claude.ai Project about whatever you keep returning to: books, people, places, ideas, work. At the end of each conversation Claude writes a small update to the map, Claude Code merges it, and your map (an offline 3D graph of everything you've talked about, sized by how often you come back to it) is republished as a private page you can open on any device.
 
+![A map after 17 conversations: 600 ideas and the links between them, gathered into 12 topics](docs/img/map.jpg)
+
+*A real map after 17 conversations, shown with stand-in topic names. Each dot is a person, work, place or idea that came up, sized by how much the conversations keep returning to it. A globe gathers each topic.*
+
 This copy starts blank. Your first conversation builds it.
+
+## What you get
+
+The pictures show a real map after 17 conversations: 600 ideas, 817 links, 12 topics. Its shape and every number are as they are. The topic names are stand-ins and the names of the individual ideas are left off, because a map like this is personal. In your own map every topic and idea carries its own name, and each idea opens to its note.
+
+| Topics only | Orbits |
+|---|---|
+| ![The 12 topics as globes, with a line between every two that share links or ideas](docs/img/topics.jpg) | ![The 12 topics circling the map's owner on four rings](docs/img/orbits.jpg) |
+| The ideas step back and the topics show their ties: a line wherever two of them share links or ideas. | The topics circle you. The closer the ring, the more often later conversations came back to that topic. |
+
+Both are choices on one control in the viewer (Filters, Layout, Globes). Also in the viewer:
+
+- **Timeline:** one tick per conversation. Replay the map growing, or spotlight what a single conversation touched.
+- **Path:** the shortest chain of links between any two ideas.
+- **History:** every change to the map, newest first.
+- **Share:** what leads your conversations, by topic, type or field.
+- **Analyze:** a reading of your map that recommends public projects to look at, run on your own Claude account.
+
+The first time you open your map it walks you through all of this in about a minute. After that a **?** button on the map keeps a one-page guide.
 
 ## Get started (once, about half an hour)
 
