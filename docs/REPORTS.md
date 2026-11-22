@@ -15,7 +15,7 @@
 | **Unclassified nodes** | nodes with no `fields.txt` line | `data/validate.mjs` warning | console | every run (must be zero before build) |
 | **Top 10 by strength, type/edge/origin/basis counts** | sanity summary | `data/validate.mjs` console | console; copied into `out/reports/run-summary.md` | every run |
 | **Run summary** | counts (nodes, edges, conversations, latest conversation), delta applied, verify totals, unclassified, top 10 strength, field distribution | `scripts/export.mjs` | `out/reports/run-summary.md` (git-ignored; give the paragraph to the owner) | every run |
-| **Knowledge file** | threads + nodes + edges verbatim, for the chat side | `data/src/generate.mjs` → `data/knowledge/dialogic-map.txt`; copied by `scripts/export.mjs` | `out/knowledge/dialogic-map.txt` → the owner uploads to the Project | every run (see `KNOWLEDGE-HANDOFF.md`) |
+| **Knowledge file** | threads + nodes + edges verbatim, for the chat side | `data/src/generate.mjs` → `data/knowledge/dialogic-map.txt`; copied by `scripts/export.mjs` | `out/knowledge/dialogic-map.txt` → the owner uploads to the Project, or the Project syncs `data/knowledge/dialogic-map.txt` from GitHub | every run (see `KNOWLEDGE-HANDOFF.md`) |
 | **OPEN-THREADS.md** | working tracker: awaiting the owner, in flight, concerns, banked | hand-maintained by the session | repo | every run |
 
 ## Not reports, but easy to confuse
