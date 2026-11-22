@@ -6,7 +6,7 @@
     </div>
     <nav id="threadnav" aria-label="Threads"></nav>
     <div class="top-actions">
-      <button id="btn-share" class="btn" type="button" aria-expanded="true" aria-controls="share">Share</button>
+      <button id="btn-analyze" class="btn" type="button" aria-expanded="false" aria-controls="analyze" aria-haspopup="dialog">Analyze</button>
       <button id="btn-history" class="btn" type="button" aria-expanded="false" aria-controls="history" hidden>History</button>
       <button id="btn-filters" class="btn" type="button" aria-expanded="true" aria-controls="filters">Filters</button>
       <button id="btn-detail" class="btn" type="button" aria-expanded="true" aria-controls="detail">Detail</button>
@@ -49,6 +49,30 @@
             <button id="btn-ink-recency" class="btn" type="button" aria-pressed="false">Recency</button>
           </div>
           <p class="note">Recency prints an idea paler the more conversations have passed since you last returned to it.</p>
+        </div>
+        <div id="globes-wrap">
+          <div class="mono sub sizeby-lbl">Globes</div>
+          <div class="seg seg-4" role="group" aria-label="Thread globes">
+            <button id="btn-globes-off" class="btn" type="button" aria-pressed="true">Off</button>
+            <button id="btn-globes-on" class="btn" type="button" aria-pressed="false">On</button>
+            <button id="btn-globes-only" class="btn" type="button" aria-pressed="false">Only</button>
+            <button id="btn-globes-orbits" class="btn" type="button" aria-pressed="false">Orbits</button>
+          </div>
+          <p class="note">A globe houses each thread&rsquo;s cluster; a deeper globe is a thread you return to more often. Only hides the ideas and shows how the threads connect: tap a globe to pick it, tap it again to go inside.</p>
+          <div id="orbit-wrap" hidden>
+            <button id="btn-orbit-pause" class="btn btn-block" type="button" aria-pressed="false">Pause</button>
+            <p class="note">Orbits sets the globes circling <span id="orbit-root"></span>. The closer the ring, the more often you return to that thread, and closer rings turn faster. Rings are bands: where a globe sits along its ring means nothing. Step the timeline to watch threads move in and out. Tap a globe to stop and read it.</p>
+          </div>
+          <div id="gcol-wrap" hidden>
+            <div class="mono sub sizeby-lbl">Globe colour</div>
+            <div class="seg seg-3" role="group" aria-label="Colour globes by">
+              <button id="btn-gcol-ink" class="btn" type="button" aria-pressed="true">Ink</button>
+              <button id="btn-gcol-threads" class="btn" type="button" aria-pressed="false">Threads</button>
+              <button id="btn-gcol-fields" class="btn" type="button" aria-pressed="false">Fields</button>
+            </div>
+            <p class="note">Ink: one ink for all. Threads: a hue for each thread. Fields: a hue for the field most of a thread&rsquo;s ideas are filed under, so threads of a kind share a colour.</p>
+            <ul id="gcol-legend" class="lg-list gcol-legend" hidden></ul>
+          </div>
         </div>
         <button id="btn-reset" class="btn btn-block" type="button">Reset view</button>
       </section>
@@ -125,12 +149,14 @@
         <div id="hist-filter" class="hist-filter" role="group" aria-label="Filter by action"></div>
         <ol id="hist-list" class="hist-list"></ol>
       </aside>
+      <button id="btn-timeline" class="btn tl-open" type="button" aria-expanded="false" aria-controls="timeline" title="Step through the conversations, replay the map growing, or spotlight one conversation" hidden>Timeline</button>
       <div id="timeline" class="timeline" hidden>
         <div class="tl-row">
           <button id="tl-play" class="btn tl-btn" type="button" aria-pressed="false" title="Replay how the map grew, one conversation at a time">Replay</button>
           <div id="tl-ticks" class="tl-ticks" role="group" aria-label="Conversations, oldest to newest"></div>
           <button id="tl-now" class="btn tl-btn btn-quiet" type="button" hidden>Latest</button>
           <button id="tl-spot" class="btn tl-btn" type="button" aria-pressed="false" title="Dim everything this conversation did not touch">Spotlight</button>
+          <button id="tl-hide" class="btn tl-btn btn-quiet tl-x" type="button" aria-label="Hide the timeline" title="Hide the timeline">&times;</button>
         </div>
         <p class="tl-cap" aria-live="polite"><span id="tl-title" class="tl-title"></span><span id="tl-meta" class="mono tl-meta"></span></p>
       </div>
@@ -179,5 +205,53 @@
       </div>
       <div id="detail-body"></div>
     </aside>
+  </div>
+
+  <div id="analyze" class="an" role="dialog" aria-modal="true" aria-labelledby="an-title" hidden>
+    <div id="an-scrim" class="an-scrim"></div>
+    <section class="an-sheet">
+      <div class="panel-head an-head">
+        <span class="mono lbl" id="an-title">Analyze</span>
+        <button id="an-close" class="btn btn-quiet" type="button">Close</button>
+      </div>
+      <div class="an-body">
+        <p class="an-lede">A reading of you, drawn from the map: what is distinctly yours, what is admirable in where your attention goes, your voice, parallels you may not have seen, and public projects your passions could take somewhere new.</p>
+        <p id="an-scope" class="mono sub an-scope"></p>
+        <p id="an-connecting" class="note">Connecting&hellip;</p>
+
+        <form id="an-keyform" class="an-keyform" hidden autocomplete="off">
+          <h2 class="mono lbl">Add an API key</h2>
+          <p class="note">Outside claude.ai there is no Claude account to run on, so this copy of the map needs an Anthropic API key. It stays in this browser and is sent only to api.anthropic.com; it is never written into the map, the repository, or a published page.</p>
+          <label class="mono sub" for="an-key">Anthropic API key</label>
+          <input id="an-key" class="an-input" type="password" placeholder="sk-ant-&hellip;" spellcheck="false" autocapitalize="off" autocomplete="off">
+          <label class="chk an-chk"><input id="an-remember" type="checkbox" checked><span class="box"></span><span class="txt">Remember on this device</span></label>
+          <div class="an-row">
+            <button class="btn an-primary" type="submit">Save key</button>
+            <button id="an-key-cancel" class="btn btn-quiet" type="button">Cancel</button>
+          </div>
+        </form>
+
+        <div id="an-run-row" class="an-run" hidden>
+          <div class="seg" role="group" aria-label="Depth">
+            <button id="an-depth-standard" class="btn" type="button" aria-pressed="true">Standard</button>
+            <button id="an-depth-deep" class="btn" type="button" aria-pressed="false">Deep</button>
+          </div>
+          <button id="an-go" class="btn an-primary" type="button">Analyze</button>
+        </div>
+        <p id="an-engine" class="mono sub an-engine"></p>
+        <p id="an-err" class="an-err" role="alert" hidden></p>
+        <p id="an-connect" class="an-connect" hidden>
+          <span class="an-connect-msg">Live project search is off: connect Hugging Face so picks are real public projects.</span>
+          <a href="https://claude.ai/connectors" target="_blank" rel="noopener noreferrer">Directory</a>
+          <a href="https://claude.ai/customize/connectors" target="_blank" rel="noopener noreferrer">Settings</a>
+          <a href="https://support.claude.com/en/articles/11176164" target="_blank" rel="noopener noreferrer">How-to</a>
+          <button id="an-connect-x" class="btn btn-quiet an-link" type="button" aria-label="Dismiss">&times;</button>
+        </p>
+
+        <p id="an-empty" class="note an-empty" hidden>Nothing written yet. Deep thinks longer and takes a minute or two.</p>
+        <article id="an-out" class="an-out" aria-live="polite" hidden></article>
+        <p id="an-foot" class="note an-foot" hidden></p>
+      </div>
+    </section>
   </div>
 </div>

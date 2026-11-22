@@ -47,11 +47,13 @@ const safeJson = s => ascii(s.split('<').join(BS + 'u003c'));
 const out = [
   '<title>Dialogic</title>',
   '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
-  '<style>\n' + fontCss + '\n' + rd('src/viewer.css') + '\n</style>',
+  '<style>\n' + fontCss + '\n' + rd('src/viewer.css') + '\n' + rd('src/guide.css') + '\n</style>',
   rd('src/viewer.html'),
   '<script type="application/json" id="graph-data">' + safeJson(JSON.stringify(graph)) + '</script>',
   '<script>' + safeJs(rd('vendor/graph-bundle.js')) + '</script>',
   '<script>' + safeJs(rd('src/viewer.js')) + '</script>',
+  '<script>' + safeJs(rd('src/analyze.js')) + '</script>',
+  '<script>' + safeJs(rd('src/guide.js')) + '</script>',
   '',
 ].join('\n');
 

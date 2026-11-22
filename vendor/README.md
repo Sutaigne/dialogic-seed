@@ -13,3 +13,7 @@ cd vendor && npm ci && npx esbuild entry.js --bundle --minify --outfile=graph-bu
 No extra flag is needed: esbuild's default output for `--bundle` without `--format` is already an IIFE for the browser platform.
 
 Verified 2026-11-07 from a clean copy (`npm ci`, then the command above writing to a temp file): output 1,596,594 bytes vs 1,596,370 committed (+0.01%), same opening bytes. It is not byte-identical (224 bytes longer), so rebuilding changes `graph-bundle.js` and therefore `dist/dialogic-map.html`; only rebuild on purpose.
+
+## Notices
+
+`../THIRD-PARTY-NOTICES.md` lists every package that ends up inside `graph-bundle.js`, with its licence text, and the two fonts. It is generated: after rebuilding the bundle, run `node notices.mjs` here (it needs `npm ci` first) and commit the result. The fonts' own licence files sit beside them in `fonts/`.
