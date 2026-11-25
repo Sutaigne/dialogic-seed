@@ -1,7 +1,9 @@
-# Map delta format (v1.2)
+# Map delta format (v1.3)
 
 The contract between the chat project (which writes deltas) and Claude Code (which merges them).
 Source of truth: `data/src/`. Everything else is generated.
+
+**New in v1.3:** `modify` and `reverse` take a thread ref (the Roman numeral) with the fields `title` and `summary`, so a thread can be renamed through a delta and the change is logged.
 
 **In the chat project** the three map files arrive as one generated file, `dialogic-map.txt`, with `==== threads.txt ====`, `==== nodes.txt ====` and `==== edges.txt ====` sections holding each file verbatim. Claude Code regenerates it (`data/knowledge/dialogic-map.txt`) after every merge. Before the first merge there is no `dialogic-map.txt`: the map is blank, and the first delta builds it from nothing (see **The first delta** below).
 
@@ -31,6 +33,7 @@ Empty field = `-` or nothing. A field may not contain ` | `.
 ### Refs
 - A **node ref** is its id: `wild-yeast`.
 - An **edge ref** is `source > target : etype`: `kitchen-as-lab > sourdough : a`. Source, target and type identify an edge; there is at most one edge per triple.
+- A **thread ref** is its Roman numeral: `III`. Only `modify` and `reverse` take one. Everywhere else a thread is addressed through its theme node, `theme-iii` (`touched`, `reweight`). A thread cannot be removed.
 
 ## The delta block
 
@@ -52,6 +55,7 @@ sennett > harrison | i | c | - | Claude's link from Sennett's craftsman to Harri
 ## modify
 wild-yeast | note | Yeast caught from flour and air; the owner's starter is three years old. | Owner gave the starter's age | new-connection
 kitchen-as-lab > sourdough : a | label | proving ground | Owner reframed the relation | argument
+III | title | Slow work | Owner asked for plain thread names | new-connection
 
 ## remove
 polaris > sobel-longitude : p | Owner dropped this as a reach | change-of-mind
@@ -74,11 +78,11 @@ sourdough | 1
 - **add-threads**: `id | title | summary | reason | trigger`. Id = the next Roman numeral after the highest one in the threads section of `dialogic-map.txt`; an id already taken is refused. Creates the theme node `theme-<lowercase numeral>`.
 - **add-nodes**: `id | label | type | threads | note | verifyNote | reason | trigger`. Id must be new (check the nodes section first; an existing id is refused), kebab-case. Note ≤ 140 chars, one line.
 - **add-edges**: `source > target | etype | origin | label | verifyNote | reason | trigger`. Both ends must exist (or be added in the same delta). Lands under `## conversation`.
-- **modify**: `ref | field | after | reason | trigger`. Node fields: `label type threads note verifyNote`. Edge fields: `label origin type verifyNote`. The merge tool records `before` itself from the files.
+- **modify**: `ref | field | after | reason | trigger`. Node fields: `label type threads note verifyNote`. Edge fields: `label origin type verifyNote`. Thread fields: `title summary` (neither may be empty). The merge tool records `before` itself from the files. A thread change is logged against its theme node (`theme-iii`), whose label and note are rebuilt from the thread line, so they always match.
 - **remove**: `ref | reason | trigger`. Removing a node also removes its edges, each logged.
 - **reverse**: `ref | field | after | earlier position | reason [| trigger]`. Like modify, logged as `reversed` with the earlier position named. Trigger defaults to `change-of-mind`.
 - **reweight**: `ref | factor | reason [| trigger]` (trigger defaults to `argument`). Only when the owner says outright that something matters more or less. Factor multiplies strength score; latest reweight wins; `1` resets.
-- **touched**: `ref | count`. If the delta changes an edge type, use the new type here. Every existing node or edge that came up with real engagement, including everything modified. Count = substantive mentions in this conversation. New items need not be listed; they get 1 automatically.
+- **touched**: `ref | count`. If the delta changes an edge type, use the new type here. Every existing node or edge that came up with real engagement, including everything modified. A thread rename is the exception: it is housekeeping and needs no line here; list `theme-<numeral>` only if the thread itself was discussed. Count = substantive mentions in this conversation. New items need not be listed; they get 1 automatically.
 - **Ignored sections**: `## changelog`, `## log` and `## verify` are skipped with a warning. The tool writes the log itself, and verify comes from verifyNote fields.
 - **Trigger** is one of: `new-connection` · `reading` · `argument` · `change-of-mind` · `correction`.
 - Items that are Claude's inference rather than the owner's statement: a non-empty verifyNote giving the reason; edges also carry origin `c`. Nodes have no origin field, so for nodes the verifyNote alone carries the flag.
