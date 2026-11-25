@@ -220,6 +220,104 @@ test('generator is deterministic (two runs byte-identical)', () => {
   ok(Buffer.compare(a, fs.readFileSync(f)) === 0, 'outputs differ');
 });
 
+// ---- thread refs in modify / reverse (format v1.2) ----
+const threadsText = root => fs.readFileSync(path.join(root, 'src', 'threads.txt'), 'utf8');
+const RENAME = '@delta 2026-11-24 | plain-names | Plain thread names\n\n## modify\nIII | title | Slow work | Owner asked for plain thread names | new-connection\n\n## touched\n';
+
+test('modify renames a thread: threads.txt, the thread list and the theme node label move together', () => {
+  const root = fresh();
+  const before = graphOf(root);
+  const r = merge(root, writeDelta(root, RENAME));
+  ok(r.code === 0, 'exit ' + r.code + '\n' + r.out);
+  ok(threadsText(root).includes('\nIII | Slow work | Work whose quality comes from time and repetition more than talent.\n'), 'threads.txt line not rewritten:\n' + threadsText(root));
+  ok(!threadsText(root).includes('Craft & patience'), 'old title still in threads.txt');
+  const g = graphOf(root);
+  ok(g.threads.find(t => t.id === 'III').title === 'Slow work', 'graph thread title not updated');
+  ok(g.nodes.find(x => x.id === 'theme-iii').label === '§ III Slow work', 'theme label is ' + g.nodes.find(x => x.id === 'theme-iii').label);
+  ok(g.nodes.length === before.nodes.length && g.edges.length === before.edges.length, 'a rename changed the node or edge count');
+  ok(validate(root).code === 0, 'validator failed after rename');
+});
+
+test('a thread rename is logged like any modify, with before read from threads.txt', () => {
+  const root = fresh();
+  const before = graphOf(root);
+  const r = merge(root, writeDelta(root, RENAME));
+  ok(r.code === 0, 'exit ' + r.code + '\n' + r.out);
+  const g = graphOf(root);
+  ok(g.log.length === before.log.length + 1, `log grew by ${g.log.length - before.log.length}, want 1`);
+  const e = g.log[g.log.length - 1];
+  ok(e.action === 'modified' && e.target === 'theme-iii', `logged as ${e.action} ${e.target}`);
+  ok(e.before === 'title: Craft & patience' && e.after === 'title: Slow work', `before/after: ${e.before} -> ${e.after}`);
+  ok(e.reason === 'Owner asked for plain thread names' && e.trigger === 'new-connection' && e.source === '2026-11-24 plain-names', 'reason, trigger or source wrong: ' + JSON.stringify(e));
+  ok(/modified":1/.test(r.out), 'summary does not count the rename as modified:\n' + r.out);
+});
+
+test('a thread rename is housekeeping: no touched entry needed, no warning, no mention added', () => {
+  const root = fresh();
+  const m0 = graphOf(root).nodes.find(x => x.id === 'theme-iii').mentions;
+  const r = merge(root, writeDelta(root, RENAME));
+  ok(r.code === 0, 'exit ' + r.code + '\n' + r.out);
+  ok(!/not in touched/.test(r.out), 'warned about touched:\n' + r.out);
+  ok(graphOf(root).nodes.find(x => x.id === 'theme-iii').mentions === m0, 'rename added a mention to the theme node');
+});
+
+test('modify changes a thread summary and the theme node note follows', () => {
+  const root = fresh();
+  const d = '@delta 2026-11-24 | summary-edit | Summary edit\n\n## modify\nII | summary | Bread and what makes it rise. | Owner wanted a shorter summary | new-connection\n\n## touched\n';
+  const r = merge(root, writeDelta(root, d));
+  ok(r.code === 0, 'exit ' + r.code + '\n' + r.out);
+  const g = graphOf(root);
+  ok(g.threads.find(t => t.id === 'II').summary === 'Bread and what makes it rise.', 'summary not updated');
+  ok(g.nodes.find(x => x.id === 'theme-ii').note === 'Bread and what makes it rise.', 'theme note not updated');
+  ok(g.threads.find(t => t.id === 'II').title === 'Bread & fermentation', 'title changed by a summary edit');
+  const e = g.log[g.log.length - 1];
+  ok(e.target === 'theme-ii' && e.before.startsWith('summary: Sourdough, wild yeast') && e.after === 'summary: Bread and what makes it rise.', 'log entry wrong: ' + JSON.stringify(e));
+});
+
+test('reverse takes a thread ref and names the earlier position', () => {
+  const root = fresh();
+  const d = '@delta 2026-11-24 | back-again | Back again\n\n## reverse\nIII | title | Patience and craft | Craft & patience | Owner took the old name back, reworded | change-of-mind\n\n## touched\n';
+  const r = merge(root, writeDelta(root, d));
+  ok(r.code === 0, 'exit ' + r.code + '\n' + r.out);
+  const g = graphOf(root);
+  ok(g.nodes.find(x => x.id === 'theme-iii').label === '§ III Patience and craft', 'reverse not applied to the theme label');
+  const e = g.log[g.log.length - 1];
+  ok(e.action === 'reversed' && e.target === 'theme-iii' && e.reason.includes('earlier position: Craft & patience'), 'log entry wrong: ' + JSON.stringify(e));
+});
+
+test('bad thread modifies are refused with every error listed, nothing written', () => {
+  const root = fresh();
+  const h = hashTree(root);
+  const d = '@delta 2026-11-24 | bad-threads | Bad threads\n\n## modify\nXL | title | Nowhere | no such thread | new-connection\nIII | label | Slow | wrong field name | new-connection\nI | title | - | empty title | new-connection\nII | summary | - | empty summary | new-connection\nIII | threads | I,II | node field on a thread | new-connection\n\n## touched\n';
+  const r = merge(root, writeDelta(root, d));
+  ok(r.code !== 0 && /REFUSED: 5 error/.test(r.out), 'not refused with 5 errors:\n' + r.out);
+  ok(/no such thread "XL"/.test(r.out), 'unknown numeral not reported:\n' + r.out);
+  ok((r.out.match(/bad thread field/g) || []).length === 2, 'bad field names not reported (want 2):\n' + r.out);
+  ok(/missing title/.test(r.out) && /missing summary/.test(r.out), 'empty title/summary not reported:\n' + r.out);
+  ok(hashTree(root) === h, 'files changed on refused merge');
+});
+
+test('a thread ref outside modify and reverse is refused and points at the theme node', () => {
+  const root = fresh();
+  const h = hashTree(root);
+  const d = '@delta 2026-11-24 | misplaced | Misplaced\n\n## remove\nIII | drop the thread | change-of-mind\n\n## reweight\nII | 2 | Owner: bread matters most\n\n## touched\nI | 1\n';
+  const r = merge(root, writeDelta(root, d));
+  ok(r.code !== 0 && /REFUSED: 3 error/.test(r.out), 'not refused with 3 errors:\n' + r.out);
+  ok(/"III" is a thread/.test(r.out) && /"II" is a thread/.test(r.out) && /"I" is a thread/.test(r.out), 'thread refs not named:\n' + r.out);
+  ok(/theme-ii\b/.test(r.out) && /theme-i\b/.test(r.out), 'error does not point at the theme node:\n' + r.out);
+  ok(hashTree(root) === h, 'files changed on refused merge');
+});
+
+test('a thread added and renamed in the same delta lands with the new title', () => {
+  const root = fresh();
+  // the node is there because a thread with no members fails the validator's orphan check
+  const d = '@delta 2026-11-24 | add-then-rename | Add then rename\n\n## add-threads\nIV | Work | Jobs and trades. | Owner opened a work thread | new-connection\n\n## add-nodes\nfirst-job | First job | co | IV | Where the work thread starts. | - | Owner named it | new-connection\n\n## modify\nIV | title | Career | Owner preferred the plainer word | new-connection\n\n## touched\n';
+  const r = merge(root, writeDelta(root, d));
+  ok(r.code === 0, 'exit ' + r.code + '\n' + r.out);
+  ok(threadsText(root).includes('\nIV | Career | Jobs and trades.\n'), 'threads.txt:\n' + threadsText(root));
+  ok(graphOf(root).nodes.find(x => x.id === 'theme-iv').label === '§ IV Career', 'theme label not the renamed title');
+});
+
 test('blank map: first delta without "## owner" is refused, nothing written', () => {
   const root = freshBlank();
   const h = hashTree(root);

@@ -146,8 +146,15 @@ function checkNote(v) {
   if (v.length > 140) { E(`note is ${v.length} chars (max 140)`); return false; }
   return true;
 }
-// -> {kind:'node',rec,id} | {kind:'edge',rec,key} | null  (reports errors)
-function resolve(ref, { allowTheme = false, allowBelongs = false } = {}) {
+// -> {kind:'node',rec,id} | {kind:'edge',rec,key} | {kind:'theme',id} | {kind:'thread',rec,id} | null  (reports errors)
+// A thread ref is its Roman numeral (node ids are lower-case, so the two never collide); its id is the theme node's.
+function resolve(ref, { allowTheme = false, allowBelongs = false, allowThread = false } = {}) {
+  if (ROMAN_RE.test(ref)) {
+    const rec = threadById.get(ref);
+    if (!rec) { E(`no such thread "${ref}"`); return null; }
+    if (!allowThread) { E(`"${ref}" is a thread; only modify and reverse take a thread ref (touched and reweight use ${themeId(ref)})`); return null; }
+    return { kind: 'thread', rec, id: themeId(ref) };
+  }
   if (ref.includes('>')) {
     const p = parseEdgeRef(ref);
     if (!p) { E(`bad edge ref "${ref}" (want "source > target : etype")`); return null; }
@@ -223,13 +230,23 @@ for (const { line, f } of sec['add-edges'] || []) {
 
 function modifyItem(line, ref, field, after, reason, trigger, action, earlier) {
   curLine = line;
-  const r = resolve(ref);
+  const r = resolve(ref, { allowThread: true });
   if (!r) return;
   if (removedNow.has(refOf(r))) return E(`"${ref}" was removed in this delta`);
   if (!need('reason', reason) || !trigOk(trigger)) return;
   if (action === 'reversed' && !need('earlier position', earlier)) return;
   const finalReason = action === 'reversed' ? `${reason} (earlier position: ${earlier})` : reason;
-  if (r.kind === 'node') {
+  if (r.kind === 'thread') {
+    // Logged against the theme node, whose label and note the generator builds from this line.
+    // Not added to changedRefs: a rename is housekeeping, so it asks for no touched entry.
+    const t = r.rec;
+    if (field !== 'title' && field !== 'summary') return E(`bad thread field "${field}" (title summary)`);
+    if (!need(field, after)) return;
+    const old = t[field];
+    if (old === after) return W(`${ref} ${field}: unchanged, skipped`);
+    files.threads.modify(t, () => { t[field] = after; });
+    logEntry(action, r.id, `${field}: ${old}`, `${field}: ${after}`, finalReason, trigger);
+  } else if (r.kind === 'node') {
     const n = r.rec;
     let old, nu, apply;
     switch (field) {

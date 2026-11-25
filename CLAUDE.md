@@ -87,6 +87,7 @@ Any storage service works if its connector can do four things: create a plain te
 - `verifyNote` starting with `~` is informational; any other non-empty verifyNote sets `verify: true`. Nodes have no origin field: for nodes the verifyNote alone carries the flag.
 - Edge origins: `o` owner, `c` Claude's unconfirmed inference, `s` shared (Claude offered, the owner took it up).
 - Themes come from `threads.txt`; `belongs-to` edges are generated, never written.
+- A thread's title or summary changes through a delta too (format v1.3): `III | title | Slow work | reason | trigger` under `## modify`. The tool logs it against `theme-iii` with `before` read from `threads.txt`. Never hand-edit `threads.txt`: the rename would skip the changelog and its lock.
 - Engagement counts live in `mentions.txt`; strength is `1 − e^(−score/2)` from `1 + ln(count)` per conversation with recency decay (details in `docs/DELTA-FORMAT.md`). Nothing sets it by hand.
 - `build.mjs` and `scripts/export.mjs` refuse a blank map: there is nothing to publish before the first merge.
 - The viewer (`src/viewer.*`, plus `src/analyze.js` for the Analyze sheet and `src/guide.*` for the first-open walk-through and the "?" reference card) is an ES5 IIFE; `build.mjs` inlines `vendor/graph-bundle.js` (prebuilt 3d-force-graph + three) and the fonts. Rebuilding the bundle needs `vendor/node_modules` (`npm ci` in `vendor/`, see `vendor/README.md`); the committed bundle is enough for normal runs.
